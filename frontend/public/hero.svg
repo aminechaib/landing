@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" width="1600" height="1100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7f3ec"/>
+      <stop offset="55%" stop-color="#efe7d9"/>
+      <stop offset="100%" stop-color="#e5dac6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b08d57" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#b08d57" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="1100" fill="url(#bg)"/>
+  <circle cx="800" cy="470" r="430" fill="url(#glow)"/>
+
+  <!-- orbit rings -->
+  <circle cx="800" cy="520" r="470" fill="none" stroke="url(#ring)" stroke-width="3"/>
+  <circle cx="800" cy="520" r="380" fill="none" stroke="#1c1917" stroke-opacity="0.08" stroke-width="2"/>
+  <circle cx="800" cy="520" r="300" fill="none" stroke="#1c1917" stroke-opacity="0.06" stroke-width="2"/>
+
+  <!-- floating gold dots -->
+  <circle cx="420" cy="330" r="10" fill="#b08d57" opacity="0.8"/>
+  <circle cx="1210" cy="700" r="14" fill="#b08d57" opacity="0.55"/>
+  <circle cx="1120" cy="260" r="7" fill="#1c1917" opacity="0.25"/>
+
+  <!-- headphones -->
+  <g transform="translate(800 470)">
+    <path d="M -190 -80 a 190 190 0 0 1 380 0" fill="none" stroke="#1c1917" stroke-width="26" stroke-linecap="round"/>
+    <rect x="-238" y="-90" width="108" height="165" rx="48" fill="#1c1917"/>
+    <rect x="130" y="-90" width="108" height="165" rx="48" fill="#1c1917"/>
+    <circle cx="-184" y="0" r="30" fill="#b08d57" opacity="0.9"/>
+    <circle cx="184" r="30" fill="#b08d57" opacity="0.9"/>
+  </g>
+
+  <!-- smartwatch -->
+  <g transform="translate(1210 720) scale(0.42)">
+    <path d="M -70 -210 q 70 -26 140 0 l -12 96 h -116 z" fill="#1c1917"/>
+    <path d="M -70 210 q 70 26 140 0 l -12 -96 h -116 z" fill="#1c1917"/>
+    <rect x="-150" y="-150" width="300" height="300" rx="84" fill="#1c1917"/>
+    <rect x="-124" y="-124" width="248" height="248" rx="62" fill="#f7f3ec"/>
+    <path d="M 0 -66 v 66 l 46 28" fill="none" stroke="#1c1917" stroke-width="15" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="11" fill="#b08d57"/>
+  </g>
+
+  <!-- speaker -->
+  <g transform="translate(400 740) scale(0.46)">
+    <rect x="-170" y="-240" width="340" height="480" rx="64" fill="#1c1917"/>
+    <circle cx="0" cy="-70" r="82" fill="none" stroke="#f7f3ec" stroke-width="13"/>
+    <circle cx="0" cy="-70" r="36" fill="#b08d57" opacity="0.9"/>
+    <circle cx="0" cy="122" r="58" fill="none" stroke="#f7f3ec" stroke-width="11" opacity="0.75"/>
+    <circle cx="0" cy="122" r="22" fill="#f7f3ec" opacity="0.75"/>
+  </g>
+
+  <!-- label -->
+  <text x="800" y="1035" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="34" letter-spacing="16" fill="#1c1917" fill-opacity="0.4">PREMIUM TECH</text>
+</svg>
