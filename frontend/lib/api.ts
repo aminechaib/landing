@@ -39,6 +39,35 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+/**
+ * Ask the backend whether the stored token is actually valid.
+ * Uses a raw fetch with a hard timeout so a hung/unreachable API can never
+ * leave an admin page spinning forever, and deliberately skips api()'s
+ * 401 auto-redirect so verification has no side effects.
+ */
+export async function verifyAdminSession(): Promise<{
+  ok: boolean;
+  reachable: boolean;
+}> {
+  const token = getToken();
+  if (!token) return { ok: false, reachable: true };
+
+  try {
+    const response = await fetch(`${API_URL}/api/admin/me`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(6000),
+    });
+    return { ok: response.ok, reachable: true };
+  } catch {
+    // Timeout or network failure — distinguishable from "not authorized".
+    return { ok: false, reachable: false };
+  }
+}
+
 type ApiOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
 export async function api<T = unknown>(
@@ -77,6 +106,18 @@ export async function api<T = unknown>(
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
+    // Expired/revoked session on an admin endpoint: drop the token and
+    // bounce to the login screen instead of leaving the user stranded.
+    if (
+      response.status === 401 &&
+      path.startsWith("/api/admin/") &&
+      !path.endsWith("/login") &&
+      typeof window !== "undefined"
+    ) {
+      clearToken();
+      window.location.replace("/admin/login");
+    }
+
     // Laravel validation errors: {message, errors}
     const errors =
       payload && typeof payload === "object" && "errors" in payload

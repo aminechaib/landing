@@ -42,7 +42,7 @@ export function PromoBanner({ settings }: { settings: StoreSettings | null }) {
         <button
           onClick={copyCode}
           className="group inline-flex items-center gap-3 rounded-2xl border border-dashed border-[#b08d57]/70 bg-white/5 px-6 py-4 transition-colors hover:bg-white/10"
-          aria-label={`Copy discount code ${code}`}
+          aria-label={t("promo.copyAria", { code })}
         >
           <span className="text-lg font-semibold tracking-[0.3em]">{code}</span>
           {copied ? (

@@ -14,7 +14,7 @@ export type Dir = "rtl" | "ltr";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const ar: Record<string, any> = {
-  nav: { home: "الرئيسية", collections: "المجموعات", support: "الدعم" },
+  nav: { home: "الرئيسية", collections: "المجموعات", support: "الدعم", menu: "فتح القائمة" },
   hero: {
     badge: "موسم جديد · تقنيات مميزة",
     titleA: "اكتشف ",
@@ -57,6 +57,7 @@ const ar: Record<string, any> = {
     kicker: "حصري على إنستغرام",
     defaultTitle: "حصري على إنستغرام — خصم إضافي {percent}% بكود {code}",
     copied: "تم نسخ الكود!",
+    copyAria: "انسخ كود الخصم {code}",
   },
   guarantee: {
     shipping: { title: "شحن مجاني", text: "على كل طلب، حتى باب منزلك." },
@@ -180,7 +181,7 @@ const ar: Record<string, any> = {
 };
 
 const en: Record<string, any> = {
-  nav: { home: "Home", collections: "Collections", support: "Support" },
+  nav: { home: "Home", collections: "Collections", support: "Support", menu: "Open menu" },
   hero: {
     badge: "New Season · Premium Tech",
     titleA: "Discover the ",
@@ -223,6 +224,7 @@ const en: Record<string, any> = {
     kicker: "Instagram Exclusive",
     defaultTitle: "Instagram Exclusive — Extra {percent}% Off with Code {code}",
     copied: "Code copied!",
+    copyAria: "Copy discount code {code}",
   },
   guarantee: {
     shipping: { title: "Free Shipping", text: "On every order, straight to your door." },
@@ -396,10 +398,9 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   const t = useCallback(
     (key: string, params?: Record<string, string | number>) => {
+      const localized = resolve(DICTIONARIES[locale], key);
       const template =
-        resolve(DICTIONARIES[locale], key) !== key
-          ? resolve(DICTIONARIES[locale], key)
-          : resolve(DICTIONARIES.en, key); // fall back to English, then raw key
+        localized === key ? resolve(DICTIONARIES.en, key) : localized; // fall back to English, then raw key
       return interpolate(template, params);
     },
     [locale],

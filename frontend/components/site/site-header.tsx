@@ -47,7 +47,7 @@ export function SiteHeader() {
         <div className="lg:hidden">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open menu">
+              <Button variant="ghost" size="icon" aria-label={t("nav.menu")}>
                 <Menu className="size-5" />
               </Button>
             </SheetTrigger>

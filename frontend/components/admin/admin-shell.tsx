@@ -95,7 +95,8 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
         className="w-full justify-start gap-3 text-muted-foreground"
         onClick={() => {
           clearAdminToken();
-          router.replace("/admin/login");
+          // Hard navigation resets every client-side auth state.
+          window.location.replace("/admin/login");
         }}
       >
         <LogOut className="size-4" />

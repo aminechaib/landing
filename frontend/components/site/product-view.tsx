@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, API_URL } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { formatMoney, warrantyLabel } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { captureUtm } from "@/lib/utm";
 import { cn } from "@/lib/utils";
 import type { ProductDetail, StoreSettings } from "@/types";
@@ -223,8 +223,8 @@ export function ProductView({ slug }: { slug: string }) {
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 {product.in_stock ? t("product.stockInfo", { count: product.stock_quantity }) : t("product.outOfStockLine")}
-                {" · "}
-                {warrantyLabel(product.warranty_months)}
+                {product.warranty_months > 0 &&
+                  ` · ${product.warranty_months === 12 ? t("product.warrantyYear") : t("product.warrantyMonths", { months: product.warranty_months })}`}
               </p>
             </div>
 

@@ -14,7 +14,7 @@ export function Breadcrumbs({
     <nav aria-label="Breadcrumb" className={cn("flex flex-wrap items-center gap-1.5 text-xs sm:text-[13px]", className)}>
       {items.map((item, i) => (
         <span key={`${item.label}-${i}`} className="flex items-center gap-1.5">
-          {i > 0 && <ChevronRight className="size-3.5 text-muted-foreground/50" />}
+          {i > 0 && <ChevronRight className="size-3.5 text-muted-foreground/50 rtl:-scale-x-100" />}
           {item.href ? (
             <Link href={item.href} className="text-muted-foreground transition-colors hover:text-foreground">
               {item.label.toUpperCase()}

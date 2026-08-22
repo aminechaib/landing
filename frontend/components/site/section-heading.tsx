@@ -10,13 +10,13 @@ export function SectionHeading({
   kicker?: string;
   title: string;
   description?: string;
-  align?: "center" | "left";
+  align?: "center" | "start";
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        align === "center" ? "mx-auto max-w-xl text-center" : "text-left",
+        align === "center" ? "mx-auto max-w-xl text-center" : "text-start",
         className,
       )}
     >

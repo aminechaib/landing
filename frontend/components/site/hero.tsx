@@ -14,7 +14,7 @@ export function Hero() {
       {/* Soft champagne glow */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 right-[-10%] h-[560px] w-[560px] rounded-full opacity-60 blur-3xl"
+        className="pointer-events-none absolute -top-40 right-[-10%] h-[560px] w-[560px] rounded-full opacity-60 blur-3xl rtl:right-auto rtl:left-[-10%]"
         style={{ background: "radial-gradient(closest-side, #efe4cd, transparent)" }}
       />
 
