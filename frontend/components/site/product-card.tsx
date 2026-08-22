@@ -5,17 +5,13 @@ import { ArrowRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
 
-const BADGE_LABELS: Record<string, string> = {
-  NEW_ARRIVAL: "NEW ARRIVAL",
-  BEST_SELLER: "BEST SELLER",
-  SALE: "SALE",
-};
-
 export function ProductCard({ product }: { product: Product }) {
+  const { t } = useI18n();
   const outOfStock = !product.in_stock;
 
   return (
@@ -38,14 +34,14 @@ export function ProductCard({ product }: { product: Product }) {
         {product.badge && (
           <Badge
             variant={product.badge === "SALE" ? "sale" : "gold"}
-            className="absolute top-3 left-3 backdrop-blur"
+            className="absolute top-3 left-3 backdrop-blur rtl:left-auto rtl:right-3"
           >
-            {BADGE_LABELS[product.badge] ?? product.badge}
+            {t(`badges.${product.badge}`)}
           </Badge>
         )}
         {outOfStock && (
           <span className="absolute inset-x-0 bottom-0 bg-foreground/75 py-1.5 text-center text-xs font-medium tracking-wide text-background uppercase">
-            Out of stock
+            {t("badges.OUT_OF_STOCK")}
           </span>
         )}
       </div>
@@ -69,9 +65,9 @@ export function ProductCard({ product }: { product: Product }) {
               outOfStock ? "text-muted-foreground" : "text-foreground group-hover:text-accent",
             )}
           >
-            {outOfStock ? "Sold out" : "View"}
+            {outOfStock ? t("badges.OUT_OF_STOCK") : t("badges.VIEW")}
             {!outOfStock && (
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5" />
             )}
           </span>
         </div>

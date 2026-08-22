@@ -1,24 +1,31 @@
+"use client";
+
 import { RotateCcw, ShieldCheck, Truck } from "lucide-react";
 
+import { useI18n } from "@/lib/i18n";
+
 export function GuaranteeBar({ warrantyMonths }: { warrantyMonths: number }) {
+  const { t } = useI18n();
+  const warrantyTitle =
+    warrantyMonths === 12
+      ? t("guarantee.warranty.year")
+      : t("guarantee.warranty.title", { months: warrantyMonths });
+
   const items = [
     {
       icon: Truck,
-      title: "Free Shipping",
-      text: "On every order, straight to your door.",
+      title: t("guarantee.shipping.title"),
+      text: t("guarantee.shipping.text"),
     },
     {
       icon: ShieldCheck,
-      title:
-        warrantyMonths === 12
-          ? "1-Year Warranty"
-          : `${warrantyMonths}-Month Warranty`,
-      text: "Official coverage on all defects.",
+      title: warrantyTitle,
+      text: t("guarantee.warranty.text"),
     },
     {
       icon: RotateCcw,
-      title: "30-Day Returns",
-      text: "Changed your mind? No problem.",
+      title: t("guarantee.returns.title"),
+      text: t("guarantee.returns.text"),
     },
   ];
 

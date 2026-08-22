@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { ProductCard } from "@/components/site/product-card";
 import { SectionHeading } from "@/components/site/section-heading";
+import { useI18n } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Category, Product } from "@/types";
@@ -21,6 +22,8 @@ export function FavoritesSection({
   activeCategory: string | null;
   onCategoryChange: (slug: string | null) => void;
 }) {
+  const { t } = useI18n();
+
   const filtered = useMemo(() => {
     if (!activeCategory) return products.filter((p) => p.is_featured);
     return products.filter(
@@ -32,7 +35,7 @@ export function FavoritesSection({
   }, [products, categories, activeCategory]);
 
   const chips = [
-    { slug: null, label: "All" },
+    { slug: null, label: t("favorites.all") },
     ...categories.map((c) => ({ slug: c.slug, label: c.name })),
   ];
 
@@ -40,9 +43,9 @@ export function FavoritesSection({
     <section id="favorites" className="scroll-mt-20 bg-[#faf8f4]">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-24">
         <SectionHeading
-          kicker="Loved by our customers"
-          title="CUSTOMER FAVORITES"
-          description="The pieces our community keeps coming back for."
+          kicker={t("favorites.kicker")}
+          title={t("favorites.title")}
+          description={t("favorites.description")}
         />
 
         {/* Category filter */}
@@ -76,7 +79,7 @@ export function FavoritesSection({
           </div>
         ) : filtered.length === 0 ? (
           <p className="mt-12 text-center text-sm text-muted-foreground">
-            No products in this collection yet — check back soon.
+            {t("favorites.empty")}
           </p>
         ) : (
           <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">

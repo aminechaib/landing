@@ -4,12 +4,18 @@ import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 
 import type { StoreSettings } from "@/types";
+import { useI18n } from "@/lib/i18n";
 
 export function PromoBanner({ settings }: { settings: StoreSettings | null }) {
   const [copied, setCopied] = useState(false);
+  const { t, locale } = useI18n();
   const code = settings?.promo_code ?? "PORTAGE10";
   const percent = settings?.promo_percent ?? 10;
-  const title = settings?.promo_title ?? `Instagram Exclusive — Extra ${percent}% Off with Code ${code}`;
+  // Server-stored titles are English marketing copy; fall back to a localized default.
+  const title =
+    locale === "en" && settings?.promo_title
+      ? settings.promo_title
+      : t("promo.defaultTitle", { percent, code });
 
   async function copyCode() {
     try {
@@ -24,9 +30,9 @@ export function PromoBanner({ settings }: { settings: StoreSettings | null }) {
   return (
     <section className="bg-[#17140f] text-white">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-12 sm:px-6 lg:flex-row lg:py-14">
-        <div className="text-center lg:text-left">
+        <div className="text-center lg:text-start">
           <p className="mb-2 text-xs font-semibold tracking-[0.25em] text-[#d8b98a] uppercase">
-            Instagram Exclusive
+            {t("promo.kicker")}
           </p>
           <h2 className="text-xl font-medium tracking-tight text-balance sm:text-2xl">
             {title}

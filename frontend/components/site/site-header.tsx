@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 
 import { Logo } from "@/components/site/logo";
+import { LanguageSwitcher } from "@/components/site/language-switcher";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,16 +14,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Collections", href: "/#collections" },
-  { label: "Support", href: "/#support" },
-];
+import { useI18n } from "@/lib/i18n";
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
+
+  const navLinks = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.collections"), href: "/#collections" },
+    { label: t("nav.support"), href: "/#support" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -55,9 +58,9 @@ export function SiteHeader() {
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-1 px-5 pt-2">
-                {NAV_LINKS.map((link) => (
+                {navLinks.map((link) => (
                   <Link
-                    key={link.label}
+                    key={link.href}
                     href={link.href}
                     onClick={() => setOpen(false)}
                     className="rounded-lg px-3 py-3 text-base font-medium hover:bg-secondary"
@@ -65,6 +68,9 @@ export function SiteHeader() {
                     {link.label}
                   </Link>
                 ))}
+                <div className="mt-2 border-t border-border pt-2">
+                  <LanguageSwitcher className="justify-start" />
+                </div>
               </nav>
             </SheetContent>
           </Sheet>
@@ -77,18 +83,22 @@ export function SiteHeader() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-9 lg:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
-              key={link.label}
+              key={link.href}
               href={link.href}
               className="text-sm font-medium tracking-wide text-foreground/80 transition-colors hover:text-foreground"
             >
-              {link.label.toUpperCase()}
+              {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden w-[104px] lg:block" aria-hidden />
+        <div className="flex items-center gap-1 lg:w-auto">
+          <div className="hidden lg:block">
+            <LanguageSwitcher />
+          </div>
+        </div>
       </div>
     </header>
   );

@@ -15,16 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, API_URL } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { formatMoney, warrantyLabel } from "@/lib/format";
 import { captureUtm } from "@/lib/utm";
 import { cn } from "@/lib/utils";
 import type { ProductDetail, StoreSettings } from "@/types";
-
-const BADGE_LABELS: Record<string, string> = {
-  NEW_ARRIVAL: "NEW ARRIVAL",
-  BEST_SELLER: "BEST SELLER",
-  SALE: "SALE",
-};
 
 export function ProductView({ slug }: { slug: string }) {
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -34,6 +29,7 @@ export function ProductView({ slug }: { slug: string }) {
   const [activeImage, setActiveImage] = useState(0);
   const [variantId, setVariantId] = useState<number | null>(null);
   const [orderOpen, setOrderOpen] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     captureUtm();
@@ -82,10 +78,10 @@ export function ProductView({ slug }: { slug: string }) {
   if (notFound || !product) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-4 text-center">
-        <p className="text-lg font-medium">This product is no longer available.</p>
+        <p className="text-lg font-medium">{t("product.notAvailable")}</p>
         <Button asChild variant="outline">
           <Link href="/">
-            <ArrowLeft className="size-4" /> Back to store
+            <ArrowLeft className="size-4 rtl:-scale-x-100" /> {t("product.backToStore")}
           </Link>
         </Button>
       </div>
@@ -102,7 +98,7 @@ export function ProductView({ slug }: { slug: string }) {
         <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
           <Breadcrumbs
             items={[
-              { label: "HOME", href: "/" },
+              { label: t("product.home"), href: "/" },
               ...(product.category
                 ? [{ label: product.category.name }]
                 : []),
@@ -124,9 +120,9 @@ export function ProductView({ slug }: { slug: string }) {
               {product.badge && (
                 <Badge
                   variant={product.badge === "SALE" ? "sale" : "gold"}
-                  className="absolute top-4 left-4 backdrop-blur"
+                  className="absolute top-4 left-4 backdrop-blur rtl:left-auto rtl:right-4"
                 >
-                  {BADGE_LABELS[product.badge] ?? product.badge}
+                  {t(`badges.${product.badge}`)}
                 </Badge>
               )}
             </div>
@@ -166,7 +162,7 @@ export function ProductView({ slug }: { slug: string }) {
 
             <div className="mt-3 flex items-center gap-3">
               <StarRating rating={5} />
-              <span className="text-xs text-muted-foreground">Customer stories below</span>
+              <span className="text-xs text-muted-foreground">{t("product.storiesHint")}</span>
             </div>
 
             <p className="mt-5 text-3xl font-semibold tracking-tight">
@@ -183,7 +179,7 @@ export function ProductView({ slug }: { slug: string }) {
             {product.variants.length > 0 && (
               <div className="mt-7">
                 <p className="mb-3 text-xs font-semibold tracking-widest uppercase">
-                  Style — <span className="font-normal normal-case tracking-normal text-muted-foreground">{variant?.name ?? "Select an option"}</span>
+                  {t("product.styleLabel")} — <span className="font-normal normal-case tracking-normal text-muted-foreground">{variant?.name ?? t("product.selectStyle")}</span>
                 </p>
                 <div className="flex flex-wrap gap-2.5">
                   {product.variants.map((v) => (
@@ -199,7 +195,7 @@ export function ProductView({ slug }: { slug: string }) {
                     >
                       {v.name}
                       {v.price !== null && v.price !== product.selling_price && (
-                        <span className="ml-2 text-xs text-muted-foreground">
+                        <span className="ml-2 text-xs text-muted-foreground rtl:ml-0 rtl:mr-2">
                           {formatMoney(v.price, product.currency)}
                         </span>
                       )}
@@ -223,12 +219,10 @@ export function ProductView({ slug }: { slug: string }) {
                 }}
                 className="h-14 w-full text-base font-semibold tracking-wider ring-1 ring-accent/40 hover:ring-accent"
               >
-                {product.in_stock ? "ORDER NOW" : "OUT OF STOCK"}
+                {product.in_stock ? t("product.orderNow") : t("badges.OUT_OF_STOCK")}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                {product.in_stock
-                  ? `${product.stock_quantity} in stock · Cash on Delivery`
-                  : "Check back soon"}
+                {product.in_stock ? t("product.stockInfo", { count: product.stock_quantity }) : t("product.outOfStockLine")}
                 {" · "}
                 {warrantyLabel(product.warranty_months)}
               </p>
