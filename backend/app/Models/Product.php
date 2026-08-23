@@ -11,6 +11,19 @@ class Product extends Model
 {
     use SoftDeletes;
 
+    /**
+     * Mirror of the DB column defaults (create_catalog_tables migration).
+     * Keeps the in-memory model consistent right after create() when the
+     * request omits these fields (e.g. currency for the initial price row).
+     */
+    protected $attributes = [
+        'currency' => 'USD',
+        'warranty_months' => 12,
+        'status' => 'ACTIVE',
+        'stock_quantity' => 0,
+        'is_featured' => false,
+    ];
+
     protected $fillable = [
         'sku', 'barcode', 'name', 'slug', 'description', 'features',
         'brand_id', 'category_id', 'selling_price', 'currency',

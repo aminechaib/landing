@@ -106,15 +106,14 @@ class ProductController extends Controller
     /** PUT /api/admin/products/{product} */
     public function update(Request $request, Product $product): JsonResponse
     {
-        $data = $this->validated($request, forUpdate: true);
+        $data = $this->validated($request, forUpdate: true, ignoreId: $product->id);
 
         // Price changes must go through the dedicated price endpoint.
         unset($data['selling_price']);
 
         $data['slug'] = $this->uniqueSlug($data['slug'] ?? $data['name'] ?? $product->slug, ignoreId: $product->id);
-        $data['features'] = $this->parseFeatures($data['features'] ?? '__KEEP__');
-        if ($data['features'] === '__KEEP__') {
-            unset($data['features']);
+        if (array_key_exists('features', $data)) {
+            $data['features'] = $this->parseFeatures($data['features']);
         }
 
         $product->update($data);
@@ -258,11 +257,11 @@ class ProductController extends Controller
         return response()->json(['message' => 'Image removed.']);
     }
 
-    private function validated(Request $request, bool $forUpdate = false): array
+    private function validated(Request $request, bool $forUpdate = false, ?int $ignoreId = null): array
     {
         $rules = [
             'name' => [$forUpdate ? 'sometimes' : 'required', 'string', 'max:255'],
-            'sku' => [$forUpdate ? 'sometimes' : 'required', 'string', 'max:100'],
+            'sku' => [$forUpdate ? 'sometimes' : 'required', 'string', 'max:100', 'unique:products,sku' . ($ignoreId ? ",{$ignoreId}" : '')],
             'barcode' => ['nullable', 'string', 'max:100'],
             'slug' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -304,9 +303,6 @@ class ProductController extends Controller
      */
     private function parseFeatures(mixed $value): ?array
     {
-        if ($value === '__KEEP__') {
-            return '__KEEP__';
-        }
         if (is_array($value)) {
             return $value;
         }
