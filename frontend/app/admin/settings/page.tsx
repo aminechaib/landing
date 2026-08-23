@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { adminApi, apiUpload } from "@/lib/api";
+import { TESTIMONIALS } from "@/lib/testimonials";
 import type { HeroContent, HomeContent } from "@/types";
 
 const SCALAR_FIELDS: { key: string; label: string; type?: string }[] = [
@@ -62,6 +63,8 @@ export default function SettingsPage() {
     stories: true,
   });
   const [stories, setStories] = useState<Record<Locale, Story[]>>({ en: [], ar: [] });
+  // Which set the storefront renders: built-in defaults or the rows below.
+  const [mode, setMode] = useState<"default" | "custom">("custom");
   const [heroImage, setHeroImage] = useState<string | null>(null);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -89,6 +92,9 @@ export default function SettingsPage() {
 
         const storedStories = (data.testimonials ?? {}) as Partial<Record<Locale, Story[]>>;
         setStories({ en: storedStories.en ?? [], ar: storedStories.ar ?? [] });
+
+        const storedMode = (data.testimonials_mode as string | undefined) ?? "custom";
+        setMode(storedMode === "default" ? "default" : "custom");
       })
       .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load settings"))
       .finally(() => setLoading(false));
@@ -122,6 +128,22 @@ export default function SettingsPage() {
 
   function removeStory(locale: Locale, index: number) {
     setStories((prev) => ({ ...prev, [locale]: prev[locale].filter((_, i) => i !== index) }));
+  }
+
+  /** Seeds the editor with copies of the built-in stories so they can be tweaked. */
+  function copyDefaults(locale: Locale) {
+    setStories((prev) => ({ ...prev, [locale]: TESTIMONIALS[locale].map((s) => ({ ...s })) }));
+    toast.info(`Copied ${TESTIMONIALS[locale].length} default rows — press Save to keep them`);
+  }
+
+  /** One click: switch to Custom and fill both languages with editable copies of the defaults. */
+  function startFromDefaults() {
+    setMode("custom");
+    setStories({
+      en: TESTIMONIALS.en.map((s) => ({ ...s })),
+      ar: TESTIMONIALS.ar.map((s) => ({ ...s })),
+    });
+    toast.info("Default rows copied into both languages — edit them, then press Save");
   }
 
   async function handleHeroUpload(file: File | null) {
@@ -173,6 +195,7 @@ export default function SettingsPage() {
           ...values,
           home_content: homeContent,
           testimonials: stories,
+          testimonials_mode: mode,
           home_sections: sections,
         }),
       });
@@ -320,21 +343,71 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Customer stories per language */}
+        {/* Customer stories: source switch + per-language editors */}
+        <Card className="gap-4 p-5">
+          <h2 className="text-sm font-semibold">Customer stories source</h2>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Built-in defaults shows the seeded reviews. Custom uses your rows below — if the rows
+            are empty, the built-ins are shown instead.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-lg border border-border p-1">
+              <Button
+                type="button"
+                size="sm"
+                variant={mode === "default" ? "default" : "ghost"}
+                onClick={() => setMode("default")}
+              >
+                Built-in defaults
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={mode === "custom" ? "default" : "ghost"}
+                onClick={() => setMode("custom")}
+              >
+                Custom
+              </Button>
+            </div>
+            {mode === "custom" && (
+              <Button type="button" size="sm" variant="outline" onClick={startFromDefaults}>
+                Start from defaults
+              </Button>
+            )}
+          </div>
+          {mode === "default" && (
+            <p className="text-xs font-medium text-amber-600">
+              The storefront is currently ignoring your custom rows.
+            </p>
+          )}
+        </Card>
+
         <div className="grid gap-6 lg:grid-cols-2">
           {(["en", "ar"] as Locale[]).map((locale) => (
             <Card key={locale} className="gap-4 p-5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">
                   Customer stories — {locale === "en" ? "English" : "العربية"}
                 </h2>
-                <Button type="button" variant="outline" size="sm" onClick={() => addStory(locale)}>
-                  <Plus className="size-4" /> Add story
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    title="Replaces the current rows with copies of the built-in defaults so you can tweak them"
+                    onClick={() => copyDefaults(locale)}
+                  >
+                    Copy defaults
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => addStory(locale)}>
+                    <Plus className="size-4" /> Add story
+                  </Button>
+                </div>
               </div>
               {stories[locale].length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  No custom stories — the storefront shows the built-in seeded ones.
+                  No custom stories — use “Copy defaults” to start from the built-in ones, or “Add
+                  story” for a blank row.
                 </p>
               )}
               {stories[locale].map((story, index) => (

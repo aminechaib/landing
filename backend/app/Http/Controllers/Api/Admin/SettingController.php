@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
-    private const KEYS = ['store_name', 'promo_code', 'promo_percent', 'promo_title', 'promo_title_ar', 'shipping_cost', 'support_email', 'support_phone'];
+    private const KEYS = ['store_name', 'promo_code', 'promo_percent', 'promo_title', 'promo_title_ar', 'shipping_cost', 'support_email', 'support_phone', 'testimonials_mode'];
 
     private const JSON_KEYS = ['home_content', 'testimonials', 'home_sections'];
 
@@ -44,6 +44,7 @@ class SettingController extends Controller
             'home_content' => ['nullable', 'array'],
             'testimonials' => ['nullable', 'array'],
             'home_sections' => ['nullable', 'array'],
+            'testimonials_mode' => ['nullable', 'in:default,custom'],
         ]);
 
         // Keep only known blocks per language ("hero", "guarantees"); drop anything else.

@@ -7,8 +7,13 @@ import type { StoreSettings } from "@/types";
 
 export function TestimonialsSection({ settings }: { settings: StoreSettings | null }) {
   const { t, locale } = useI18n();
-  // Server-stored stories win; the built-in set stays as fallback.
-  const items = settings?.testimonials?.[locale] ?? TESTIMONIALS[locale];
+  // Admin picks the source: built-in defaults or their custom rows (empty rows fall back).
+  const mode = settings?.testimonials_mode ?? "custom";
+  const custom = settings?.testimonials?.[locale];
+  const items = mode === "custom" && custom && custom.length > 0 ? custom : TESTIMONIALS[locale];
+
+  // Avoid the built-in → custom flash while settings are still loading.
+  if (!settings) return null;
 
   return (
     <section>

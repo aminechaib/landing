@@ -95,5 +95,8 @@ class SettingsSeeder extends Seeder
             'favorites' => true,
             'stories' => true,
         ])]);
+
+        // Customer stories source: "default" (built-ins) or "custom" (admin rows).
+        Setting::firstOrCreate(['key' => 'testimonials_mode'], ['value' => 'custom']);
     }
 }

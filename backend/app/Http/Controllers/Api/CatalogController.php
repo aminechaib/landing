@@ -121,6 +121,8 @@ class CatalogController extends Controller
                 // Bilingual homepage content blocks, stored as JSON strings.
                 'home' => json_decode((string) Setting::get('home_content'), true),
                 'testimonials' => json_decode((string) Setting::get('testimonials'), true),
+                // Story source: built-in defaults or the admin-managed rows above.
+                'testimonials_mode' => Setting::get('testimonials_mode') ?: 'custom',
                 // Which homepage sections the admin has enabled (missing = visible).
                 'sections' => json_decode((string) Setting::get('home_sections'), true),
             ],

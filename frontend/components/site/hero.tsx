@@ -15,6 +15,9 @@ export function Hero({ settings }: { settings: StoreSettings | null }) {
   const pick = (key: Parameters<typeof t>[0], server?: string) =>
     server ?? t(key);
 
+  // Wait for real settings instead of flashing built-in content first.
+  if (!settings) return null;
+
   return (
     <section className="relative overflow-hidden">
       {/* Soft champagne glow */}

@@ -92,6 +92,8 @@ export type StoreSettings = {
   testimonials?: Partial<
     Record<"ar" | "en", { name: string; location: string; rating: number; title: string; text: string }[]>
   > | null;
+  // Which story source the storefront renders: built-ins or admin rows.
+  testimonials_mode?: "default" | "custom" | null;
   sections?: Partial<Record<"hero" | "collections" | "promo" | "favorites" | "stories", boolean>> | null;
 };
 
