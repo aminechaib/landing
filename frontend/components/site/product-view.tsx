@@ -29,7 +29,7 @@ export function ProductView({ slug }: { slug: string }) {
   const [activeImage, setActiveImage] = useState(0);
   const [variantId, setVariantId] = useState<number | null>(null);
   const [orderOpen, setOrderOpen] = useState(false);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   useEffect(() => {
     captureUtm();
@@ -247,8 +247,8 @@ export function ProductView({ slug }: { slug: string }) {
           </div>
         </div>
 
-        <GuaranteeBar warrantyMonths={product.warranty_months} />
-        <TestimonialsSection />
+        <GuaranteeBar warrantyMonths={product.warranty_months} content={settings?.home?.[locale]?.guarantees} />
+        <TestimonialsSection settings={settings} />
       </main>
 
       <SiteFooter settings={settings} />

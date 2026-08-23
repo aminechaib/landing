@@ -86,5 +86,7 @@ Route::prefix('admin')->group(function () {
         // Settings
         Route::get('settings', [Admin\SettingController::class, 'show']);
         Route::put('settings', [Admin\SettingController::class, 'update']);
+        Route::post('settings/hero-image', [Admin\SettingController::class, 'uploadHeroImage']);
+        Route::delete('settings/hero-image', [Admin\SettingController::class, 'destroyHeroImage']);
     });
 });

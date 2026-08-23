@@ -3,29 +3,42 @@
 import { RotateCcw, ShieldCheck, Truck } from "lucide-react";
 
 import { useI18n } from "@/lib/i18n";
+import type { GuaranteeContent } from "@/types";
 
-export function GuaranteeBar({ warrantyMonths }: { warrantyMonths: number }) {
+export function GuaranteeBar({
+  warrantyMonths,
+  content,
+}: {
+  warrantyMonths: number;
+  content?: GuaranteeContent;
+}) {
   const { t } = useI18n();
+
+  const shipping = content?.shipping;
+  const warranty = content?.warranty;
+  const returns = content?.returns;
+
   const warrantyTitle =
-    warrantyMonths === 12
+    warranty?.title ??
+    (warrantyMonths === 12
       ? t("guarantee.warranty.year")
-      : t("guarantee.warranty.title", { months: warrantyMonths });
+      : t("guarantee.warranty.title", { months: warrantyMonths }));
 
   const items = [
     {
       icon: Truck,
-      title: t("guarantee.shipping.title"),
-      text: t("guarantee.shipping.text"),
+      title: shipping?.title ?? t("guarantee.shipping.title"),
+      text: shipping?.text ?? t("guarantee.shipping.text"),
     },
     {
       icon: ShieldCheck,
       title: warrantyTitle,
-      text: t("guarantee.warranty.text"),
+      text: warranty?.text ?? t("guarantee.warranty.text"),
     },
     {
       icon: RotateCcw,
-      title: t("guarantee.returns.title"),
-      text: t("guarantee.returns.text"),
+      title: returns?.title ?? t("guarantee.returns.title"),
+      text: returns?.text ?? t("guarantee.returns.text"),
     },
   ];
 

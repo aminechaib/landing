@@ -114,9 +114,15 @@ class CatalogController extends Controller
                 'promo_code' => Setting::get('promo_code'),
                 'promo_percent' => (float) Setting::get('promo_percent', '0'),
                 'promo_title' => Setting::get('promo_title'),
+                'promo_title_ar' => Setting::get('promo_title_ar'),
                 'shipping_cost' => (float) Setting::get('shipping_cost', config('shop.shipping_cost')),
                 'support_email' => Setting::get('support_email'),
                 'support_phone' => Setting::get('support_phone'),
+                // Bilingual homepage content blocks, stored as JSON strings.
+                'home' => json_decode((string) Setting::get('home_content'), true),
+                'testimonials' => json_decode((string) Setting::get('testimonials'), true),
+                // Which homepage sections the admin has enabled (missing = visible).
+                'sections' => json_decode((string) Setting::get('home_sections'), true),
             ],
         ]);
     }

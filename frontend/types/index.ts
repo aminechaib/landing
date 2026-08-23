@@ -54,14 +54,45 @@ export type ProductDetail = Omit<Product, "sku"> & {
   variants: ProductVariant[];
 };
 
+export type HeroContent = {
+  badge?: string;
+  title_before?: string;
+  title_accent?: string;
+  title_after?: string;
+  subtitle?: string;
+  cta?: string;
+  explore?: string;
+  image?: string;
+  image_alt?: string;
+  free_shipping?: string;
+  on_every_order?: string;
+};
+
+export type GuaranteeContent = {
+  shipping?: { title?: string; text?: string };
+  warranty?: { title?: string; year?: string; text?: string };
+  returns?: { title?: string; text?: string };
+};
+
+export type HomeContent = {
+  hero?: HeroContent;
+  guarantees?: GuaranteeContent;
+};
+
 export type StoreSettings = {
   store_name: string;
   promo_code: string | null;
   promo_percent: number;
   promo_title: string | null;
+  promo_title_ar: string | null;
   shipping_cost: number;
   support_email: string | null;
   support_phone: string | null;
+  home?: Partial<Record<"ar" | "en", HomeContent>> | null;
+  testimonials?: Partial<
+    Record<"ar" | "en", { name: string; location: string; rating: number; title: string; text: string }[]>
+  > | null;
+  sections?: Partial<Record<"hero" | "collections" | "promo" | "favorites" | "stories", boolean>> | null;
 };
 
 export type OrderPayload = {

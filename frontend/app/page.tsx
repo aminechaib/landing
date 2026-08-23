@@ -9,6 +9,7 @@ import { Hero } from "@/components/site/hero";
 import { PromoBanner } from "@/components/site/promo-banner";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
+import { TestimonialsSection } from "@/components/site/testimonials-section";
 import { api, API_URL } from "@/lib/api";
 import { captureUtm } from "@/lib/utm";
 import type { Category, Product, StoreSettings } from "@/types";
@@ -54,16 +55,22 @@ export default function HomePage() {
       <SiteHeader />
 
       <main className="flex-1">
-        <Hero />
-        <CollectionsSection categories={categories} onSelect={handleSelectCollection} />
-        <PromoBanner settings={settings} />
-        <FavoritesSection
-          products={products}
-          categories={categories}
-          loading={loading}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
+        {/* Section visibility is admin-controlled; a missing flag means visible. */}
+        {settings?.sections?.hero ?? true ? <Hero settings={settings} /> : null}
+        {settings?.sections?.collections ?? true ? (
+          <CollectionsSection categories={categories} onSelect={handleSelectCollection} />
+        ) : null}
+        {settings?.sections?.promo ?? true ? <PromoBanner settings={settings} /> : null}
+        {settings?.sections?.favorites ?? true ? (
+          <FavoritesSection
+            products={products}
+            categories={categories}
+            loading={loading}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
+        ) : null}
+        {settings?.sections?.stories ?? true ? <TestimonialsSection settings={settings} /> : null}
 
         {/* SEO / crawlability strip */}
         <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">

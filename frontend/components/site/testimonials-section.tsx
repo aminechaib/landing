@@ -1,12 +1,14 @@
 import { SectionHeading } from "@/components/site/section-heading";
 import { StarRating } from "@/components/site/star-rating";
-import { TESTIMONIALS } from "@/lib/testimonials";
+import { TESTIMONIALS, Testimonial } from "@/lib/testimonials";
 import { useI18n } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
+import type { StoreSettings } from "@/types";
 
-export function TestimonialsSection() {
+export function TestimonialsSection({ settings }: { settings: StoreSettings | null }) {
   const { t, locale } = useI18n();
-  const items = TESTIMONIALS[locale];
+  // Server-stored stories win; the built-in set stays as fallback.
+  const items = settings?.testimonials?.[locale] ?? TESTIMONIALS[locale];
 
   return (
     <section>
@@ -17,7 +19,7 @@ export function TestimonialsSection() {
           description={t("stories.description")}
         />
         <div className="mt-10 grid gap-5 md:grid-cols-3 lg:gap-6">
-          {items.map((testimonial) => (
+          {items.map((testimonial: Testimonial) => (
             <Card key={testimonial.name} className="gap-0 p-6 transition-shadow hover:shadow-md">
               <StarRating rating={testimonial.rating} />
               <h3 className="mt-4 text-sm font-semibold">{testimonial.title}</h3>
