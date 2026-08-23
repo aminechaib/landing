@@ -5,6 +5,9 @@ export type Category = {
   parent_id: number | null;
   products_count?: number;
   children?: Category[];
+  description?: string | null;
+  image?: string | null;
+  show_in_collections?: boolean;
 };
 
 export type Brand = {
@@ -131,6 +134,13 @@ export type AdminStats = {
   pending_orders: number;
   todays_orders: number;
   todays_revenue: number;
+  currency?: string;
+};
+
+export type Currency = {
+  id: number;
+  code: string;
+  name: string;
 };
 
 export type AdminProduct = {

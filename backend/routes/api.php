@@ -53,8 +53,11 @@ Route::prefix('admin')->group(function () {
 
         // Reference entities
         Route::apiResource('categories', Admin\CategoryAdminController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['categories' => 'id']);
+        Route::post('categories/{id}/image', [Admin\CategoryAdminController::class, 'uploadImage'])->whereNumber('id');
+        Route::delete('categories/{id}/image', [Admin\CategoryAdminController::class, 'destroyImage'])->whereNumber('id');
         Route::apiResource('brands', Admin\BrandAdminController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['brands' => 'id']);
         Route::apiResource('suppliers', Admin\SupplierAdminController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['suppliers' => 'id']);
+        Route::apiResource('currencies', Admin\CurrencyAdminController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['currencies' => 'id']);
 
         // Orders
         Route::get('orders', [Admin\OrderController::class, 'index']);

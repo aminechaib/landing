@@ -58,7 +58,7 @@ export default function DashboardPage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Revenue today"
-              value={formatMoney(stats?.todays_revenue ?? 0)}
+              value={formatMoney(stats?.todays_revenue ?? 0, stats?.currency)}
               hint={`${stats?.todays_orders ?? 0} order(s) today`}
             />
             <StatCard label="Pending orders" value={stats?.pending_orders ?? 0} hint="Awaiting confirmation" />

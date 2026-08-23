@@ -87,8 +87,10 @@ class CatalogController extends Controller
     /** GET /api/categories */
     public function categories(): JsonResponse
     {
+        // Roots flagged out by the admin are hidden from the storefront entirely.
         $roots = Category::query()
             ->whereNull('parent_id')
+            ->where('show_in_collections', true)
             ->with('children')
             ->withCount('products')
             ->orderBy('sort_order')

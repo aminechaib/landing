@@ -55,7 +55,7 @@ export default function HomePage() {
 
       <main className="flex-1">
         <Hero />
-        <CollectionsSection onSelect={handleSelectCollection} />
+        <CollectionsSection categories={categories} onSelect={handleSelectCollection} />
         <PromoBanner settings={settings} />
         <FavoritesSection
           products={products}

@@ -27,7 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { adminApi } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
-import type { AdminCategory, AdminProductDetail, Brand } from "@/types";
+import type { AdminCategory, AdminProductDetail, Brand, Currency } from "@/types";
 
 export interface ProductFormValues {
   name: string;
@@ -38,6 +38,7 @@ export interface ProductFormValues {
   brand_id: string;
   description: string;
   selling_price: string; // create-only; edits go through the dedicated price endpoint
+  currency: string;
   warranty_months: string;
   badge: string;
   status: string;
@@ -53,6 +54,7 @@ const EMPTY: ProductFormValues = {
   barcode: "",
   category_id: "",
   brand_id: "",
+  currency: "",
   description: "",
   selling_price: "",
   warranty_months: "24",
@@ -75,10 +77,12 @@ function slugify(value: string) {
 export function ProductForm({
   categories,
   brands,
+  currencies = [],
   initial = null,
 }: {
   categories: AdminCategory[];
   brands: Brand[];
+  currencies?: Currency[];
   initial?: AdminProductDetail | null;
 }) {
   const router = useRouter();
@@ -99,6 +103,7 @@ export function ProductForm({
       barcode: initial.barcode ?? "",
       category_id: initial.category_id ? String(initial.category_id) : "",
       brand_id: initial.brand_id ? String(initial.brand_id) : "",
+      currency: initial.currency ?? "",
       description: initial.description ?? "",
       selling_price: String(initial.selling_price ?? ""),
       warranty_months: String(initial.warranty_months ?? 24),
@@ -145,6 +150,7 @@ export function ProductForm({
         barcode: values.barcode.trim() || null,
         category_id: values.category_id ? Number(values.category_id) : null,
         brand_id: values.brand_id ? Number(values.brand_id) : null,
+        currency: values.currency || null,
         description: values.description || null,
         warranty_months: Number(values.warranty_months || 24),
         badge: values.badge === "none" ? null : values.badge,
@@ -476,6 +482,26 @@ export function ProductForm({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Currency</Label>
+            <Select value={values.currency || undefined} onValueChange={(v) => set("currency", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder={currencies[0] ? `${currencies[0].code}` : "No currencies"} />
+              </SelectTrigger>
+              <SelectContent>
+                {currencies.map((currency) => (
+                  <SelectItem key={currency.code} value={currency.code}>
+                    {currency.code} — {currency.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {initial && values.currency && initial.currency !== values.currency && (
+              <p className="text-xs text-muted-foreground">
+                Keeps the same numeric price ({formatMoney(Number(initial.selling_price), values.currency)}) — the switch is recorded in price history.
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Status</Label>

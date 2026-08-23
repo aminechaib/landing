@@ -17,7 +17,7 @@ class Product extends Model
      * request omits these fields (e.g. currency for the initial price row).
      */
     protected $attributes = [
-        'currency' => 'USD',
+        'currency' => 'QAR',
         'warranty_months' => 12,
         'status' => 'ACTIVE',
         'stock_quantity' => 0,

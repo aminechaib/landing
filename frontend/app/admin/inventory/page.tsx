@@ -198,7 +198,7 @@ export default function InventoryPage() {
                           <StockBadge quantity={batch.quantity_remaining} />
                         </TableCell>
                         <TableCell className="hidden tabular-nums lg:table-cell">
-                          {batch.purchase_price != null ? formatMoney(Number(batch.purchase_price)) : "—"}
+                          {batch.purchase_price != null ? formatMoney(Number(batch.purchase_price), batch.currency) : "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">{formatDate(batch.arrival_date)}</TableCell>
                       </TableRow>

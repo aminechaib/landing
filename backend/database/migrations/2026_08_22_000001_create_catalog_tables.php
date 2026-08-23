@@ -38,7 +38,7 @@ return new class extends Migration
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
 
             $table->decimal('selling_price', 12, 2);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('QAR');
 
             $table->unsignedInteger('warranty_months')->default(12);
 
@@ -82,7 +82,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->decimal('price', 12, 2);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('QAR');
             $table->timestamp('valid_from');
             $table->timestamp('valid_to')->nullable();
             $table->string('reason')->nullable();

@@ -111,12 +111,20 @@ class ProductController extends Controller
         // Price changes must go through the dedicated price endpoint.
         unset($data['selling_price']);
 
+        // Currency changes roll the price history over to a new open record.
+        $newCurrency = $data['currency'] ?? null;
+        unset($data['currency']);
+
         $data['slug'] = $this->uniqueSlug($data['slug'] ?? $data['name'] ?? $product->slug, ignoreId: $product->id);
         if (array_key_exists('features', $data)) {
             $data['features'] = $this->parseFeatures($data['features']);
         }
 
         $product->update($data);
+
+        if ($newCurrency !== null && $newCurrency !== $product->currency) {
+            $product = $this->products->changeCurrency($product, $newCurrency);
+        }
 
         if (array_key_exists('variants', $data)) {
             $this->syncVariants($product, $data['variants'] ?? []);
@@ -269,7 +277,7 @@ class ProductController extends Controller
             'brand_id' => ['nullable', 'exists:brands,id'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'selling_price' => [$forUpdate ? 'prohibited' : 'required', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'size:3'],
+            'currency' => ['nullable', 'string', 'size:3', 'exists:currencies,code'],
             'warranty_months' => ['nullable', 'integer', 'min:0', 'max:120'],
             'status' => ['nullable', 'in:ACTIVE,INACTIVE,DISCONTINUED'],
             'badge' => ['nullable', 'in:NEW_ARRIVAL,BEST_SELLER,SALE'],

@@ -2,7 +2,7 @@
 
 return [
 
-    'currency' => env('SHOP_CURRENCY', 'USD'),
+    'currency' => env('SHOP_CURRENCY', 'QAR'),
 
     // Fallback shipping cost when the settings table has no value.
     'shipping_cost' => env('SHOP_SHIPPING_COST', 0),

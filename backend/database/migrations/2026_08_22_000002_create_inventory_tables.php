@@ -26,7 +26,7 @@ return new class extends Migration
             $table->unsignedInteger('quantity_received');
             $table->unsignedInteger('quantity_remaining');
             $table->decimal('purchase_price', 12, 2);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('QAR');
             $table->date('arrival_date');
             $table->string('supplier_invoice_number')->nullable();
             $table->text('notes')->nullable();

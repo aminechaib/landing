@@ -24,6 +24,7 @@ import { formatDate, formatMoney } from "@/lib/format";
 import type {
   AdminCategory,
   Brand,
+  Currency,
   AdminProductDetail,
   ProductHistory,
 } from "@/types";
@@ -35,20 +36,23 @@ export default function EditProductPage() {
   const [product, setProduct] = useState<AdminProductDetail | null>(null);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [history, setHistory] = useState<ProductHistory | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [productRes, categoriesRes, brandsRes, historyRes] = await Promise.all([
+      const [productRes, categoriesRes, brandsRes, currenciesRes, historyRes] = await Promise.all([
         adminApi<{ data: AdminProductDetail }>(`/api/admin/products/${params.id}`),
         adminApi<{ data: AdminCategory[] }>("/api/admin/categories"),
         adminApi<{ data: Brand[] }>("/api/admin/brands"),
+        adminApi<{ data: Currency[] }>("/api/admin/currencies"),
         adminApi<{ data: ProductHistory }>(`/api/admin/products/${params.id}/history`),
       ]);
       setProduct(productRes.data);
       setCategories(categoriesRes.data);
       setBrands(brandsRes.data);
+      setCurrencies(currenciesRes.data);
       setHistory(historyRes.data);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load product");
@@ -105,7 +109,7 @@ export default function EditProductPage() {
         </TabsList>
 
         <TabsContent value="details" className="mt-5">
-          <ProductForm categories={categories} brands={brands} initial={product} />
+          <ProductForm categories={categories} brands={brands} currencies={currencies} initial={product} />
         </TabsContent>
 
         <TabsContent value="images" className="mt-5">

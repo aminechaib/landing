@@ -36,7 +36,7 @@ return new class extends Migration
             $table->decimal('shipping_cost', 12, 2)->default(0);
             $table->decimal('discount', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('QAR');
 
             $table->string('source')->default('DIRECT'); // DIRECT|INSTAGRAM|FACEBOOK|SNAPCHAT|TIKTOK|GOOGLE|WHATSAPP|OTHER
             $table->string('utm_source')->nullable();

@@ -14,11 +14,30 @@ class CatalogSeeder extends Seeder
     public function run(ProductService $productService): void
     {
         // -------------------------------------------------------------
-        // Categories — mirrors the storefront collections
+        // Categories — mirrors the storefront collections.
+        // Root categories get a generated placeholder image that the
+        // admin can replace with real photography via the admin panel.
         // -------------------------------------------------------------
-        $audio = Category::create(['name' => 'Audio', 'slug' => 'audio', 'sort_order' => 1]);
-        $wearables = Category::create(['name' => 'Wearables', 'slug' => 'wearables', 'sort_order' => 2]);
-        $home = Category::create(['name' => 'Home', 'slug' => 'home', 'sort_order' => 3]);
+        $roots = [
+            ['name' => 'Audio', 'slug' => 'audio', 'sort_order' => 1, 'description' => 'From immersive over-ear sound to pocketable earbuds.', 'art' => 'headphones'],
+            ['name' => 'Wearables', 'slug' => 'wearables', 'sort_order' => 2, 'description' => 'Smartwatches and bands that keep up with your day.', 'art' => 'watch'],
+            ['name' => 'Home', 'slug' => 'home', 'sort_order' => 3, 'description' => 'Speakers and soundbars that fill your space.', 'art' => 'speaker'],
+        ];
+
+        foreach ($roots as $index => $data) {
+            $category = Category::create([
+                'name' => $data['name'],
+                'slug' => $data['slug'],
+                'sort_order' => $data['sort_order'],
+                'description' => $data['description'],
+            ]);
+
+            $path = "categories/{$data['slug']}.svg";
+            Storage::disk('public')->put($path, PlaceholderImage::make($data['art'], strtoupper($data['name']), $index));
+            $category->update(['image_path' => $path]);
+        }
+
+        [$audio, $wearables, $home] = Category::query()->whereIn('slug', ['audio', 'wearables', 'home'])->orderBy('sort_order')->get()->all();
 
         $headphones = Category::create(['name' => 'Headphones', 'slug' => 'headphones', 'parent_id' => $audio->id]);
         $earbuds = Category::create(['name' => 'Earbuds', 'slug' => 'earbuds', 'parent_id' => $audio->id]);
@@ -102,7 +121,7 @@ class CatalogSeeder extends Seeder
                         ['title' => 'Smart Control, Anywhere', 'description' => 'Adaptive ANC, multipoint pairing and instant device switching.'],
                     ],
                     'selling_price' => 349.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 24,
                     'status' => 'ACTIVE',
                     'badge' => 'BEST_SELLER',
@@ -126,7 +145,7 @@ class CatalogSeeder extends Seeder
                         ['title' => 'All-Day Power', 'description' => '8h per charge, 32h with the case.'],
                     ],
                     'selling_price' => 129.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'badge' => 'NEW_ARRIVAL',
@@ -150,7 +169,7 @@ class CatalogSeeder extends Seeder
                         ['title' => '7-Day Battery', 'description' => 'Full week of use, 30 days on watch face only.'],
                     ],
                     'selling_price' => 299.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'badge' => 'SALE',
@@ -174,7 +193,7 @@ class CatalogSeeder extends Seeder
                         ['title' => 'Sleep Coach', 'description' => 'Automatic sleep staging with daily recovery score.'],
                     ],
                     'selling_price' => 79.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'is_featured' => false,
@@ -197,7 +216,7 @@ class CatalogSeeder extends Seeder
                         ['title' => '18-Hour Battery', 'description' => 'Take the party anywhere, IP67 rated.'],
                     ],
                     'selling_price' => 199.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'badge' => 'BEST_SELLER',
@@ -221,7 +240,7 @@ class CatalogSeeder extends Seeder
                         ['title' => 'Optical + BT 5.3', 'description' => 'Plug into your TV or stream from anywhere.'],
                     ],
                     'selling_price' => 399.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 24,
                     'status' => 'ACTIVE',
                     'is_featured' => false,
@@ -243,7 +262,7 @@ class CatalogSeeder extends Seeder
                         ['title' => 'One-Cable Setup', 'description' => 'Single HDMI eARC to your TV.'],
                     ],
                     'selling_price' => 259.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'badge' => 'NEW_ARRIVAL',
@@ -266,7 +285,7 @@ class CatalogSeeder extends Seeder
                         ['title' => 'Balanced Tuning', 'description' => 'Warm mids, clean highs, controlled bass.'],
                     ],
                     'selling_price' => 89.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'badge' => 'SALE',
@@ -289,7 +308,7 @@ class CatalogSeeder extends Seeder
                         ['title' => '12h Playtime', 'description' => 'Sunrise to sunset on one charge.'],
                     ],
                     'selling_price' => 59.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'badge' => 'NEW_ARRIVAL',
@@ -312,7 +331,7 @@ class CatalogSeeder extends Seeder
                         ['title' => 'Waterproof 10m', 'description' => 'No housing needed down to 10 metres.'],
                     ],
                     'selling_price' => 179.00,
-                    'currency' => 'USD',
+                    'currency' => config('shop.currency'),
                     'warranty_months' => 12,
                     'status' => 'ACTIVE',
                     'is_featured' => false,

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Boxes,
+  Coins,
   Download,
   LayoutDashboard,
   LogOut,
@@ -42,6 +43,7 @@ const NAV = [
   { href: "/admin/categories", label: "Categories", icon: Tags },
   { href: "/admin/brands", label: "Brands", icon: Package },
   { href: "/admin/suppliers", label: "Suppliers", icon: UserRound },
+  { href: "/admin/currencies", label: "Currencies", icon: Coins },
   { href: "/admin/exports", label: "Exports", icon: Download },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

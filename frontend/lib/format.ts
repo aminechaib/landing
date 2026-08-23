@@ -1,4 +1,4 @@
-export function formatMoney(value: number | string, currency = "USD"): string {
+export function formatMoney(value: number | string, currency = "QAR"): string {
   const amount = typeof value === "string" ? parseFloat(value) : value;
   try {
     return new Intl.NumberFormat("en-US", {

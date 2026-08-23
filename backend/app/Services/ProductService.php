@@ -57,4 +57,38 @@ class ProductService
             'reason' => $reason,
         ]);
     }
+
+    /**
+     * Change the pricing currency without converting amounts: closes the open
+     * price record and opens a new one at the same numeric price, so history
+     * always shows which currency each price was valid in.
+     */
+    public function changeCurrency(Product $product, string $newCurrency): Product
+    {
+        return DB::transaction(function () use ($product, $newCurrency) {
+            $product = Product::query()->whereKey($product->id)->lockForUpdate()->firstOrFail();
+
+            if ($product->currency === $newCurrency) {
+                return $product;
+            }
+
+            ProductPrice::query()
+                ->where('product_id', $product->id)
+                ->whereNull('valid_to')
+                ->update(['valid_to' => now()]);
+
+            ProductPrice::create([
+                'product_id' => $product->id,
+                'price' => (float) $product->selling_price,
+                'currency' => $newCurrency,
+                'valid_from' => now(),
+                'valid_to' => null,
+                'reason' => 'CURRENCY_CHANGE',
+            ]);
+
+            $product->update(['currency' => $newCurrency]);
+
+            return $product->fresh();
+        });
+    }
 }

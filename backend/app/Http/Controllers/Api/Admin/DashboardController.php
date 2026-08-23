@@ -27,6 +27,7 @@ class DashboardController extends Controller
                 'todays_revenue' => (float) ((clone $todayOrders)
                     ->whereNotIn('status', ['CANCELLED'])
                     ->sum('total')),
+                'currency' => config('shop.currency'),
             ],
         ]);
     }
