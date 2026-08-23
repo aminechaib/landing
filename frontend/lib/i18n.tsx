@@ -376,6 +376,9 @@ function interpolate(template: string, params?: Record<string, string | number>)
   );
 }
 
+/** Built-in hero copy per locale — lets the dashboard prefill editors with the defaults. */
+export const HERO_DEFAULTS: Record<Locale, Record<string, string>> = { ar: ar.hero, en: en.hero };
+
 /** Client-side only i18n. Arabic is the default language; choice persists in localStorage. */
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   // Default: Arabic. Restored preference is applied after mount (client-side only).

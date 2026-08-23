@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { adminApi, apiUpload } from "@/lib/api";
+import { HERO_DEFAULTS } from "@/lib/i18n";
 import { TESTIMONIALS } from "@/lib/testimonials";
 import type { HeroContent, HomeContent } from "@/types";
 
@@ -51,6 +52,20 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 };
 
 const EMPTY_STORY: Story = { name: "", location: "", rating: 5, title: "", text: "" };
+
+// HeroContent field → key inside the built-in i18n dictionary (lib/i18n.tsx).
+const HERO_I18N_KEYS: Record<Exclude<keyof HeroContent, "image">, string> = {
+  badge: "badge",
+  title_before: "titleA",
+  title_accent: "titleAccent",
+  title_after: "titleB",
+  subtitle: "subtitle",
+  cta: "cta",
+  explore: "explore",
+  image_alt: "imgAlt",
+  free_shipping: "freeShipping",
+  on_every_order: "onEveryOrder",
+};
 
 export default function SettingsPage() {
   const [values, setValues] = useState<Record<string, string | number | null>>({});
@@ -144,6 +159,25 @@ export default function SettingsPage() {
       ar: TESTIMONIALS.ar.map((s) => ({ ...s })),
     });
     toast.info("Default rows copied into both languages — edit them, then press Save");
+  }
+
+  /** Prefills one hero card with the built-in texts so they can be tweaked. Keeps the uploaded image. */
+  function copyHeroDefaults(locale: Locale) {
+    const defaults = HERO_DEFAULTS[locale];
+    setHomeContent((prev) => ({
+      ...prev,
+      [locale]: {
+        ...prev[locale],
+        hero: Object.fromEntries(
+          Object.entries(HERO_I18N_KEYS).map(([contentKey, i18nKey]) => [
+            contentKey,
+            defaults[i18nKey] ?? "",
+          ]),
+        ) as HeroContent,
+        ...(prev[locale].hero?.image ? { image: prev[locale].hero.image } : {}),
+      },
+    }));
+    toast.info("Built-in hero texts copied — press Save to keep them");
   }
 
   async function handleHeroUpload(file: File | null) {
@@ -312,9 +346,20 @@ export default function SettingsPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {(["en", "ar"] as Locale[]).map((locale) => (
             <Card key={locale} className="gap-4 p-5">
-              <h2 className="text-sm font-semibold">
-                Homepage hero copy — {locale === "en" ? "English" : "العربية"}
-              </h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">
+                  Homepage hero copy — {locale === "en" ? "English" : "العربية"}
+                </h2>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  title="Fill the fields below with the built-in texts so you can tweak them"
+                  onClick={() => copyHeroDefaults(locale)}
+                >
+                  Copy defaults
+                </Button>
+              </div>
               <p className="-mt-2 text-xs text-muted-foreground">
                 Empty fields fall back to the built-in translations.
               </p>
