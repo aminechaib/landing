@@ -96,3 +96,10 @@ body {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* Skeleton shimmer sweep */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

@@ -1,28 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { ProductCard } from "@/components/site/product-card";
 import { SectionHeading } from "@/components/site/section-heading";
 import { useI18n } from "@/lib/i18n";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useInView } from "@/lib/use-in-view";
 import { cn } from "@/lib/utils";
 import type { Category, Product } from "@/types";
 
 export function FavoritesSection({
   products,
   categories,
-  loading,
   activeCategory,
   onCategoryChange,
 }: {
   products: Product[];
   categories: Category[];
-  loading: boolean;
   activeCategory: string | null;
   onCategoryChange: (slug: string | null) => void;
 }) {
   const { t } = useI18n();
+  const { ref: gridRef, visible: gridVisible } = useInView({ once: true, threshold: 0.05 });
+  const { ref: chipsRef, visible: chipsVisible } = useInView({ once: true, threshold: 0.1 });
 
   const filtered = useMemo(() => {
     if (!activeCategory) return products.filter((p) => p.is_featured);
@@ -49,17 +49,22 @@ export function FavoritesSection({
         />
 
         {/* Category filter */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-          {chips.map((chip) => (
+        <div ref={chipsRef} className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          {chips.map((chip, i) => (
             <button
               key={chip.label}
               onClick={() => onCategoryChange(chip.slug)}
               className={cn(
-                "rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
+                "rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 activeCategory === chip.slug
                   ? "border-accent bg-accent-soft text-[#8a6d3f]"
                   : "border-border bg-card text-muted-foreground hover:border-accent/40 hover:text-foreground",
               )}
+              style={{
+                transitionDelay: chipsVisible ? `${i * 50 + 60}ms` : "0ms",
+                opacity: chipsVisible ? 1 : 0,
+                transform: chipsVisible ? "translateY(0)" : "translateY(12px)",
+              }}
             >
               {chip.label}
             </button>
@@ -67,24 +72,24 @@ export function FavoritesSection({
         </div>
 
         {/* Grid */}
-        {loading ? (
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="aspect-square rounded-2xl" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/3" />
-              </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <p className="mt-12 text-center text-sm text-muted-foreground">
             {t("favorites.empty")}
           </p>
         ) : (
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {filtered.slice(0, 8).map((product) => (
-              <ProductCard key={product.id} product={product} />
+          <div ref={gridRef} className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+            {filtered.slice(0, 8).map((product, i) => (
+              <div
+                key={product.id}
+                className="transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                style={{
+                  transitionDelay: gridVisible ? `${i * 80 + 100}ms` : "0ms",
+                  opacity: gridVisible ? 1 : 0,
+                  transform: gridVisible ? "translateY(0)" : "translateY(24px)",
+                }}
+              >
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         )}

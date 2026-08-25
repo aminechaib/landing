@@ -2,9 +2,9 @@
 
 import { SectionHeading } from "@/components/site/section-heading";
 import { useI18n } from "@/lib/i18n";
+import { useInView } from "@/lib/use-in-view";
 import type { Category } from "@/types";
 
-// Shown while a category has no uploaded image yet.
 const FALLBACKS = ["/collections/wearables.svg", "/collections/audio.svg", "/collections/home.svg"];
 
 export function CollectionsSection({
@@ -15,6 +15,7 @@ export function CollectionsSection({
   onSelect: (slug: string) => void;
 }) {
   const { t } = useI18n();
+  const { ref, visible } = useInView({ once: true, threshold: 0.05 });
 
   return (
     <section id="collections" className="scroll-mt-20">
@@ -25,7 +26,7 @@ export function CollectionsSection({
           description={t("collections.description")}
         />
 
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+        <div ref={ref} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
           {categories.map((category, i) => {
             const name = category.name;
             const tagline = category.description ?? "";
@@ -38,9 +39,14 @@ export function CollectionsSection({
                   onSelect(category.slug);
                   document.getElementById("favorites")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className={`group relative overflow-hidden rounded-3xl border border-border text-start shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_24px_50px_-24px_rgba(28,22,14,0.35)] ${
+                className={`group relative overflow-hidden rounded-3xl border border-border text-start shadow-sm transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_24px_50px_-24px_rgba(28,22,14,0.35)] ${
                   i === 0 ? "sm:col-span-2 sm:aspect-[2/1] lg:col-span-1 lg:aspect-auto" : ""
                 } aspect-[4/3]`}
+                style={{
+                  transitionDelay: visible ? `${i * 100 + 80}ms` : "0ms",
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? "translateY(0)" : "translateY(24px)",
+                }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

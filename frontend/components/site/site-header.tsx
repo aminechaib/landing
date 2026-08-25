@@ -42,7 +42,7 @@ export function SiteHeader() {
           : "border-transparent bg-background"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-[72px]">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-24">
         {/* Mobile menu */}
         <div className="lg:hidden">
           <Sheet open={open} onOpenChange={setOpen}>

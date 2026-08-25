@@ -14,7 +14,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "relative inline-flex h-9 items-center justify-center overflow-hidden",
+        "relative inline-flex h-14 items-center justify-center overflow-hidden",
         className,
       )}
       aria-label="Store logo"
@@ -24,13 +24,13 @@ export function Logo({ className }: { className?: string }) {
         <img
           src="/logo.png"
           alt="Store logo"
-          className="max-h-9 w-auto object-contain"
+          className="max-h-14 w-auto object-contain"
           onError={() => setFailed(true)}
         />
       ) : (
         <span
           aria-hidden
-          className="inline-block h-9 w-[104px] rounded-lg border border-dashed border-border bg-card"
+          className="inline-block h-14 w-[140px] rounded-lg border border-dashed border-border bg-card"
         />
       )}
     </span>
