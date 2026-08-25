@@ -19,10 +19,10 @@ export function GuaranteeBar({
   const returns = content?.returns;
 
   const warrantyTitle =
-    warranty?.title ??
     (warrantyMonths === 12
-      ? t("guarantee.warranty.year")
-      : t("guarantee.warranty.title", { months: warrantyMonths }));
+      ? (warranty?.title ?? t("guarantee.warranty.year"))
+      : (warranty?.title ?? t("guarantee.warranty.title"))
+    ).replace("{months}", String(warrantyMonths));
 
   const items = [
     {

@@ -35,7 +35,9 @@ export function Hero({ settings }: { settings: StoreSettings | null }) {
           </p>
           <h1 className="text-[2.6rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-6xl lg:text-[4.2rem]">
             {pick("hero.titleA", c?.title_before)}
+            {" "}
             <span className="text-[#b08d57]">{pick("hero.titleAccent", c?.title_accent)}</span>
+            {" "}
             {pick("hero.titleB", c?.title_after)}
           </h1>
           <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
