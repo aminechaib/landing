@@ -9,13 +9,16 @@ import { useI18n } from "@/lib/i18n";
 export function PromoBanner({ settings }: { settings: StoreSettings | null }) {
   const [copied, setCopied] = useState(false);
   const { t, locale } = useI18n();
-  const code = settings?.promo_code ?? "PORTAGE10";
-  const percent = settings?.promo_percent ?? 10;
+
+  if (!settings) return null;
+
+  const code = settings.promo_code ?? "PORTAGE10";
+  const percent = settings.promo_percent ?? 10;
   // Server-stored titles are per-locale marketing copy; fall back to a localized default.
   const interpolate = (template: string) =>
     template.replace("{percent}", String(percent)).replace("{code}", code);
   const serverTitle =
-    locale === "ar" ? settings?.promo_title_ar : settings?.promo_title;
+    locale === "ar" ? settings.promo_title_ar : settings.promo_title;
   const title = serverTitle
     ? interpolate(serverTitle)
     : t("promo.defaultTitle", { percent, code });
