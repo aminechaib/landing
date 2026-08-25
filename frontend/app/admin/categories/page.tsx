@@ -35,6 +35,7 @@ export default function CategoriesPage() {
   const [editing, setEditing] = useState<Category | null>(null);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [nameAr, setNameAr] = useState("");
   const [description, setDescription] = useState("");
   const [showInCollections, setShowInCollections] = useState(true);
   const [file, setFile] = useState<File | null>(null);
@@ -74,6 +75,7 @@ export default function CategoriesPage() {
   function openNew() {
     setEditing(null);
     setName("");
+    setNameAr("");
     setDescription("");
     setShowInCollections(true);
     pickFile(null);
@@ -83,6 +85,7 @@ export default function CategoriesPage() {
   function openEdit(row: Category) {
     setEditing(row);
     setName(row.name);
+    setNameAr(row.name_ar ?? "");
     setDescription(row.description ?? "");
     setShowInCollections(row.show_in_collections ?? true);
     pickFile(null);
@@ -95,6 +98,7 @@ export default function CategoriesPage() {
         method: "PUT",
         body: JSON.stringify({
           name: row.name,
+          name_ar: row.name_ar ?? null,
           description: row.description ?? null,
           show_in_collections: show,
         }),
@@ -123,6 +127,7 @@ export default function CategoriesPage() {
     try {
       const body = JSON.stringify({
         name: name.trim(),
+        name_ar: nameAr.trim() || null,
         description: description.trim() || null,
         show_in_collections: showInCollections,
       });
@@ -181,6 +186,7 @@ export default function CategoriesPage() {
               <TableRow>
                 <TableHead className="w-16">Image</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead className="hidden sm:table-cell">Arabic</TableHead>
                 <TableHead className="hidden sm:table-cell">Description</TableHead>
                 <TableHead className="text-center">In collections</TableHead>
                 <TableHead className="w-10" />
@@ -200,6 +206,9 @@ export default function CategoriesPage() {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{row.name}</TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell" dir="rtl">
+                    {row.name_ar ?? "—"}
+                  </TableCell>
                   <TableCell className="hidden max-w-72 truncate text-muted-foreground sm:table-cell">
                     {row.description ?? "—"}
                   </TableCell>
@@ -229,8 +238,12 @@ export default function CategoriesPage() {
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="cat-name">Name</Label>
+              <Label htmlFor="cat-name">Name (English)</Label>
               <Input id="cat-name" required value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cat-name-ar">Name (Arabic)</Label>
+              <Input id="cat-name-ar" dir="rtl" value={nameAr} onChange={(e) => setNameAr(e.target.value)} placeholder="Optional — shown in Arabic storefront" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cat-desc">Description</Label>

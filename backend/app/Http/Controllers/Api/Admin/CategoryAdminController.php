@@ -13,6 +13,7 @@ class CategoryAdminController extends BaseReferenceCrudController
     {
         $this->crud = new SimpleCrudController(Category::class, [
             'name' => ['required', 'string', 'max:120'],
+            'name_ar' => ['nullable', 'string', 'max:120'],
             'description' => ['nullable', 'string'],
             'parent_id' => ['nullable', 'exists:categories,id'],
             'show_in_collections' => ['nullable', 'boolean'],

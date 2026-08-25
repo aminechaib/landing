@@ -14,7 +14,7 @@ export function CollectionsSection({
   categories: Category[];
   onSelect: (slug: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { ref, visible } = useInView({ once: true, threshold: 0.05 });
 
   return (
@@ -28,7 +28,7 @@ export function CollectionsSection({
 
         <div ref={ref} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
           {categories.map((category, i) => {
-            const name = category.name;
+            const name = locale === "ar" && category.name_ar ? category.name_ar : category.name;
             const tagline = category.description ?? "";
             const image = category.image ?? FALLBACKS[i % FALLBACKS.length];
 

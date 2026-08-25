@@ -1,6 +1,7 @@
 export type Category = {
   id: number;
   name: string;
+  name_ar: string | null;
   slug: string;
   parent_id: number | null;
   products_count?: number;
@@ -143,6 +144,7 @@ export type AdminUser = { id: number; name: string; email: string };
 export type AdminCategory = {
   id: number;
   name: string;
+  name_ar: string | null;
   slug: string;
   parent_id: number | null;
   children?: AdminCategory[];

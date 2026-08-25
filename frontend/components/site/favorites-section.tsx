@@ -20,7 +20,7 @@ export function FavoritesSection({
   activeCategory: string | null;
   onCategoryChange: (slug: string | null) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { ref: gridRef, visible: gridVisible } = useInView({ once: true, threshold: 0.05 });
   const { ref: chipsRef, visible: chipsVisible } = useInView({ once: true, threshold: 0.1 });
 
@@ -36,7 +36,7 @@ export function FavoritesSection({
 
   const chips = [
     { slug: null, label: t("favorites.all") },
-    ...categories.map((c) => ({ slug: c.slug, label: c.name })),
+    ...categories.map((c) => ({ slug: c.slug, label: locale === "ar" && c.name_ar ? c.name_ar : c.name })),
   ];
 
   return (
