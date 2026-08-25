@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+import Link from "next/link";
 import { Logo } from "@/components/site/logo";
 import {
   InstagramIcon,
@@ -103,6 +104,9 @@ export function SiteFooter({ settings }: { settings: StoreSettings | null }) {
           {/* Contact */}
           <div className="space-y-3 text-sm">
             <h3 className="font-semibold tracking-wide uppercase">{t("nav.support")}</h3>
+            <Link href="/track" className="block text-muted-foreground hover:text-foreground transition-colors">
+              {t("nav.track")}
+            </Link>
             <p className="text-muted-foreground" dir="ltr">{settings?.support_email ?? "support@example.com"}</p>
             <p className="text-muted-foreground" dir="ltr">{settings?.support_phone ?? "+1 555 010 2030"}</p>
             <p className="pt-2 text-xs leading-relaxed text-muted-foreground/70">

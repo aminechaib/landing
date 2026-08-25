@@ -19,6 +19,8 @@ Route::get('settings', [CatalogController::class, 'settings']);
 
 // Guest checkout (Cash on Delivery). Prices and stock are computed server-side.
 Route::post('orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
+Route::get('orders/{orderNumber}/track', [OrderController::class, 'track'])->middleware('throttle:30,1');
+Route::get('orders/{orderNumber}/receipt', [OrderController::class, 'receipt'])->middleware('throttle:30,1');
 
 Route::post('newsletter', [NewsletterController::class, 'store'])->middleware('throttle:10,1');
 

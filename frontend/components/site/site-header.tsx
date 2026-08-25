@@ -24,6 +24,7 @@ export function SiteHeader() {
   const navLinks = [
     { label: t("nav.home"), href: "/" },
     { label: t("nav.collections"), href: "/#collections" },
+    { label: t("nav.track"), href: "/track" },
     { label: t("nav.support"), href: "/#support" },
   ];
 

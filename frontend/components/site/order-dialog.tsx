@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCheck, Loader2, Minus, Plus, ShieldCheck, Truck } from "lucide-react";
+import { BadgeCheck, ArrowDownToLine, Loader2, Minus, Plus, ShieldCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, API_URL } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { formatMoney } from "@/lib/format";
 import { utmOrderFields } from "@/lib/utm";
@@ -128,7 +128,7 @@ export function OrderDialog({ product, variant, settings, open, onOpenChange }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         {confirmation ? (
-          <SuccessView confirmation={confirmation} onClose={() => onOpenChange(false)} />
+          <SuccessView confirmation={confirmation} phone={form.phone} onClose={() => onOpenChange(false)} />
         ) : (
           <>
             <DialogHeader>
@@ -282,12 +282,21 @@ function Row({ label, value, accent }: { label: string; value: string; accent?: 
 
 function SuccessView({
   confirmation,
+  phone,
   onClose,
 }: {
   confirmation: OrderConfirmation;
+  phone: string;
   onClose: () => void;
 }) {
   const { t } = useI18n();
+
+  function handleReceipt() {
+    window.open(
+      `${API_URL}/api/orders/${encodeURIComponent(confirmation.order_number)}/receipt?phone=${encodeURIComponent(phone.trim())}`,
+      "_blank",
+    );
+  }
 
   return (
     <div className="py-4 text-center">
@@ -310,7 +319,11 @@ function SuccessView({
         </div>
       </div>
 
-      <Button onClick={onClose} className="mt-6 w-full" size="lg">
+      <Button variant="outline" className="mt-4 w-full" onClick={handleReceipt}>
+        <ArrowDownToLine className="size-4" /> {t("order.downloadReceipt")}
+      </Button>
+
+      <Button onClick={onClose} className="mt-2 w-full" size="lg">
         {t("order.continueShopping")}
       </Button>
     </div>
