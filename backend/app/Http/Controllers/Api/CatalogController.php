@@ -54,10 +54,17 @@ class CatalogController extends Controller
             default => $query->orderByDesc('created_at'),
         };
 
+        $products = $query->paginate(min((int) $request->input('per_page', 12), 48))
+            ->withQueryString();
+
         return response()->json([
-            'data' => ProductResource::collection(
-                $query->paginate(min((int) $request->input('per_page', 12), 48))
-            ),
+            'data' => ProductResource::collection($products),
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ],
         ]);
     }
 

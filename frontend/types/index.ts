@@ -163,6 +163,20 @@ export type Paginated<T> = {
   total: number;
 };
 
+/** Pagination info echoed by the public storefront catalog. */
+export type PaginationMeta = {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+};
+
+/** Public /api/products response: flat item array + pagination meta. */
+export type ProductListResponse = {
+  data: Product[];
+  meta: PaginationMeta;
+};
+
 export type AdminStats = {
   total_products: number;
   total_stock: number;

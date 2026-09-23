@@ -123,7 +123,6 @@ export default function HomePage() {
             {settings?.sections?.marquee ?? true ? <MarqueeStrip settings={settings} /> : null}
             {settings?.sections?.favorites ?? true ? (
               <FavoritesSection
-                products={products}
                 categories={categories}
                 activeCategory={activeCategory}
                 onCategoryChange={setActiveCategory}
