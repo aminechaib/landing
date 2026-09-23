@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
 use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
@@ -11,9 +10,7 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly OrderService $orders)
-    {
-    }
+    public function __construct(private readonly OrderService $orders) {}
 
     /** GET /api/admin/orders */
     public function index(Request $request): JsonResponse
@@ -59,7 +56,7 @@ class OrderController extends Controller
         $orders->getCollection()->transform(fn ($order) => [
             'id' => $order->id,
             'order_number' => $order->order_number,
-            'customer_name' => $order->customer->first_name . ' ' . $order->customer->last_name,
+            'customer_name' => $order->customer->first_name.' '.$order->customer->last_name,
             'phone' => $order->customer->phone,
             'city' => $order->customer->city,
             'source' => $order->source,
@@ -81,6 +78,7 @@ class OrderController extends Controller
             'items.product:id,name,slug',
             'items.warranty:id,order_item_id,serial_number,warranty_months,start_date,end_date,status',
             'payments.creator:id,name',
+            'invoice',
         ]);
 
         return response()->json(['data' => [
@@ -108,6 +106,12 @@ class OrderController extends Controller
             'customer_notes' => $order->customer_notes,
             'internal_notes' => $order->internal_notes,
             'created_at' => $order->created_at->toIso8601String(),
+            'invoice' => $order->invoice ? [
+                'id' => $order->invoice->id,
+                'invoice_number' => $order->invoice->invoice_number,
+                'status' => $order->invoice->status,
+                'issued_at' => $order->invoice->issued_at?->toIso8601String(),
+            ] : null,
             'payments' => $order->payments->sortByDesc('created_at')->values()->map(fn ($p) => [
                 'id' => $p->id,
                 'amount' => (float) $p->amount,
@@ -120,7 +124,7 @@ class OrderController extends Controller
             'paid_total' => (float) $order->payments->sum('amount'),
             'customer' => [
                 'id' => $order->customer->id,
-                'name' => $order->customer->first_name . ' ' . $order->customer->last_name,
+                'name' => $order->customer->first_name.' '.$order->customer->last_name,
                 'phone' => $order->customer->phone,
                 'email' => $order->customer->email,
                 'address' => $order->customer->address,
@@ -164,7 +168,7 @@ class OrderController extends Controller
     /** PUT /api/admin/orders/{order}/status */
     public function setStatus(Request $request, Order $order): JsonResponse
     {
-        $data = $request->validate(['status' => ['required', 'in:' . implode(',', Order::STATUSES)]]);
+        $data = $request->validate(['status' => ['required', 'in:'.implode(',', Order::STATUSES)]]);
 
         $order = $this->orders->updateStatus($order, $data['status'], $request->user()->id);
 

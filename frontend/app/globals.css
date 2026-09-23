@@ -103,3 +103,19 @@ body {
     transform: translateX(100%);
   }
 }
+
+/* Print: only the active print-root (label/invoice) is printed */
+.print-root {
+  display: none;
+}
+@media print {
+  @page {
+    margin: 2mm;
+  }
+  body.printing > *:not(.print-root) {
+    display: none !important;
+  }
+  body.printing .print-root {
+    display: block !important;
+  }
+}

@@ -7,12 +7,13 @@ use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SettingController extends Controller
 {
     private const KEYS = ['store_name', 'promo_code', 'promo_percent', 'promo_title', 'promo_title_ar', 'shipping_cost', 'support_email', 'support_phone', 'testimonials_mode'];
 
-    private const JSON_KEYS = ['home_content', 'testimonials', 'marquee', 'home_sections'];
+    private const JSON_KEYS = ['home_content', 'testimonials', 'marquee', 'home_sections', 'label_settings'];
 
     /** GET /api/admin/settings */
     public function show(): JsonResponse
@@ -46,6 +47,8 @@ class SettingController extends Controller
             'marquee' => ['nullable', 'array'],
             'home_sections' => ['nullable', 'array'],
             'testimonials_mode' => ['nullable', 'in:default,custom'],
+            // Shipping label builder configuration — stored as a JSON object.
+            'label_settings' => ['nullable', 'array'],
         ]);
 
         // Keep only known blocks per language ("hero", "guarantees"); drop anything else.
@@ -96,7 +99,7 @@ class SettingController extends Controller
         }
 
         // Shared image across both languages; stored as a full URL like other media.
-        $url = asset('storage/' . $path);
+        $url = asset('storage/'.$path);
         foreach (['en', 'ar'] as $locale) {
             data_set($content, "{$locale}.hero.image", $url);
         }
@@ -134,7 +137,7 @@ class SettingController extends Controller
         $url = $content['en']['hero']['image'] ?? null;
 
         return is_string($url) && str_contains($url, '/storage/')
-            ? \Illuminate\Support\Str::after($url, '/storage/')
+            ? Str::after($url, '/storage/')
             : null;
     }
 }

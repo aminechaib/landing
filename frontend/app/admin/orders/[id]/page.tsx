@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText, Printer, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 
+import { InvoiceDocument } from "@/components/admin/invoice";
+import { ShippingLabel } from "@/components/admin/label";
+import { usePrint } from "@/components/admin/print";
 import { PaymentStatusBadge } from "@/components/admin/status-badges";
 import { PageHeader } from "@/components/admin/shared";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +44,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { adminApi } from "@/lib/api";
 import { formatDateTime, formatMoney } from "@/lib/format";
-import type { AdminOrderDetail } from "@/types";
+import { DEFAULT_LABEL_CONFIG, normalizeLabelConfig, type LabelConfig } from "@/lib/label";
+import type { AdminOrderDetail, InvoiceDetail, StoreSettings } from "@/types";
+
+type StoreInfo = {
+  store_name: string | null;
+  support_phone: string | null;
+  support_email: string | null;
+};
 
 const STATUSES = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"];
 const PAYMENT_METHODS = ["CASH", "CARD", "BANK_TRANSFER", "COD", "OTHER"];
@@ -49,9 +59,13 @@ const PAYMENT_METHODS = ["CASH", "CARD", "BANK_TRANSFER", "COD", "OTHER"];
 export default function AdminOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { print: doPrint, portal: printPortal } = usePrint();
   const [order, setOrder] = useState<AdminOrderDetail | null>(null);
+  const [store, setStore] = useState<StoreInfo>({ store_name: null, support_phone: null, support_email: null });
+  const [labelConfig, setLabelConfig] = useState<LabelConfig>(DEFAULT_LABEL_CONFIG);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [invoiceBusy, setInvoiceBusy] = useState(false);
 
   const [payOpen, setPayOpen] = useState(false);
   const [payAmount, setPayAmount] = useState<string>("");
@@ -62,8 +76,19 @@ export default function AdminOrderDetailPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await adminApi<{ data: AdminOrderDetail }>(`/api/admin/orders/${params.id}`);
-      setOrder(res.data);
+      const [orderRes, settingsRes] = await Promise.all([
+        adminApi<{ data: AdminOrderDetail }>(`/api/admin/orders/${params.id}`),
+        adminApi<{ data: Partial<StoreSettings> }>("/api/admin/settings").catch(() => null),
+      ]);
+      setOrder(orderRes.data);
+      if (settingsRes?.data) {
+        setStore({
+          store_name: settingsRes.data.store_name ?? "Portage",
+          support_phone: settingsRes.data.support_phone ?? null,
+          support_email: settingsRes.data.support_email ?? null,
+        });
+        setLabelConfig(normalizeLabelConfig(settingsRes.data.label_settings));
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load order");
     } finally {
@@ -148,6 +173,40 @@ export default function AdminOrderDetailPage() {
     }
   }
 
+  function printLabel() {
+    if (!order) return;
+    doPrint(<ShippingLabel order={order} store={store} config={labelConfig} />);
+  }
+
+  async function createInvoice() {
+    if (!order || invoiceBusy) return;
+    setInvoiceBusy(true);
+    try {
+      const res = await adminApi<{ message: string }>(`/api/admin/orders/${order.id}/invoice`, {
+        method: "POST",
+      });
+      toast.success(res.message);
+      await load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create invoice");
+    } finally {
+      setInvoiceBusy(false);
+    }
+  }
+
+  async function printInvoice() {
+    if (!order || invoiceBusy) return;
+    setInvoiceBusy(true);
+    try {
+      const res = await adminApi<{ data: InvoiceDetail }>(`/api/admin/orders/${order.id}/invoice`);
+      doPrint(<InvoiceDocument invoice={res.data} store={store} />);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load invoice");
+    } finally {
+      setInvoiceBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -181,7 +240,24 @@ export default function AdminOrderDetailPage() {
         title={order.order_number}
         description={`Placed ${formatDateTime(order.created_at)} · Source ${order.source}`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={printLabel}>
+              <StickyNote className="size-4" /> Print label
+            </Button>
+            {order.invoice ? (
+              <>
+                <Badge variant="outline" className="font-mono text-xs">
+                  {order.invoice.invoice_number}
+                </Badge>
+                <Button type="button" variant="outline" size="sm" onClick={printInvoice} disabled={invoiceBusy}>
+                  <Printer className="size-4" /> Print invoice
+                </Button>
+              </>
+            ) : (
+              <Button type="button" variant="outline" size="sm" onClick={createInvoice} disabled={invoiceBusy}>
+                <FileText className="size-4" /> Create invoice
+              </Button>
+            )}
             <Label htmlFor="order-status" className="text-xs text-muted-foreground">
               Status
             </Label>
@@ -437,6 +513,8 @@ export default function AdminOrderDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {printPortal}
     </div>
   );
 }
