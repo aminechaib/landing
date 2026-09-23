@@ -78,7 +78,7 @@ export function FavoritesSection({
           </p>
         ) : (
           <div ref={gridRef} className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {filtered.slice(0, 8).map((product, i) => (
+            {filtered.map((product, i) => (
               <div
                 key={product.id}
                 className="transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
