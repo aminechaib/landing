@@ -68,8 +68,20 @@ Route::prefix('admin')->group(function () {
         Route::put('orders/{order}/status', [Admin\OrderController::class, 'setStatus']);
         Route::post('orders/{order}/payments', [Admin\OrderController::class, 'recordPayment']);
 
+        // Invoices
+        Route::get('invoices', [Admin\InvoiceController::class, 'index']);
+        Route::get('invoices/{invoice}', [Admin\InvoiceController::class, 'show'])->whereNumber('invoice');
+        Route::get('orders/{order}/invoice', [Admin\InvoiceController::class, 'forOrder'])->whereNumber('order');
+        Route::post('orders/{order}/invoice', [Admin\InvoiceController::class, 'store'])->whereNumber('order');
+        Route::put('invoices/{invoice}/status', [Admin\InvoiceController::class, 'setStatus'])->whereNumber('invoice');
+
         // Customers
         Route::get('customers', [Admin\CustomerController::class, 'index']);
+
+        // Payments
+        Route::get('payments', [Admin\PaymentController::class, 'index']);
+        Route::put('payments/{payment}', [Admin\PaymentController::class, 'update'])->whereNumber('payment');
+        Route::delete('payments/{payment}', [Admin\PaymentController::class, 'destroy'])->whereNumber('payment');
 
         // Inventory
         Route::get('inventory/batches', [Admin\InventoryController::class, 'batches']);

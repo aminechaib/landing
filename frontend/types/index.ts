@@ -98,6 +98,8 @@ export type StoreSettings = {
   // Scrolling marquee items per locale (empty = built-in defaults).
   marquee?: Partial<Record<"ar" | "en", string[]>> | null;
   sections?: Partial<Record<"hero" | "collections" | "promo" | "favorites" | "marquee" | "stories", boolean>> | null;
+  // Admin label builder configuration (shipping label size/blocks/order).
+  label_settings?: Record<string, unknown> | null;
 };
 
 export type OrderPayload = {
@@ -308,11 +310,85 @@ export type AdminOrder = {
 export type AdminPayment = {
   id: number;
   amount: number;
+  currency: string;
   method: string;
   reference: string | null;
   notes: string | null;
   created_by: string | null;
   created_at: string;
+};
+
+/** Row in the global payments ledger. */
+export type AdminPaymentRow = AdminPayment & {
+  customer_name: string | null;
+  order: {
+    id: number;
+    order_number: string;
+    total: number;
+    currency: string;
+    payment_status: string;
+  } | null;
+};
+
+export type AdminPaymentSummary = {
+  received: number;
+  count: number;
+};
+
+export type InvoiceRow = {
+  id: number;
+  invoice_number: string;
+  status: "ISSUED" | "CANCELLED";
+  total: number;
+  currency: string;
+  issued_at: string | null;
+  order_id: number | null;
+  order_number: string | null;
+  customer_name: string | null;
+};
+
+export type InvoiceDetail = {
+  id: number;
+  invoice_number: string;
+  status: "ISSUED" | "CANCELLED";
+  total: number;
+  currency: string;
+  issued_at: string | null;
+  issuer: string | null;
+  order: {
+    id: number;
+    order_number: string;
+    status: string;
+    created_at: string;
+    payment_method: string;
+    payment_status: string;
+    shipping_status: string;
+    subtotal: number;
+    shipping_cost: number;
+    discount: number;
+    discount_code: string | null;
+    total: number;
+    currency: string;
+    customer: {
+      name: string;
+      phone: string;
+      email: string | null;
+      address: string | null;
+      city: string | null;
+    };
+    items: {
+      id: number;
+      product_name: string;
+      variant_name: string | null;
+      sku: string | null;
+      quantity: number;
+      unit_price: number;
+      total: number;
+    }[];
+  };
+  payments: AdminPayment[];
+  paid_total: number;
+  balance_due: number;
 };
 
 export type AdminOrderDetail = {
@@ -334,6 +410,12 @@ export type AdminOrderDetail = {
   customer_notes: string | null;
   internal_notes: string | null;
   created_at: string;
+  invoice: {
+    id: number;
+    invoice_number: string;
+    status: "ISSUED" | "CANCELLED";
+    issued_at: string | null;
+  } | null;
   payments: AdminPayment[] | [];
   paid_total: number;
   customer: {
