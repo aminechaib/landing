@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderReturn;
+use App\Models\Payment;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 
@@ -13,8 +15,7 @@ class DashboardController extends Controller
     public function stats(): JsonResponse
     {
         $threshold = (int) config('shop.low_stock_threshold', 10);
-
-        $todayOrders = Order::query()->whereDate('created_at', today());
+        $today = now()->toDateString();
 
         return response()->json([
             'data' => [
@@ -23,10 +24,13 @@ class DashboardController extends Controller
                 'low_stock' => Product::query()->whereBetween('stock_quantity', [1, $threshold])->count(),
                 'out_of_stock' => Product::query()->where('stock_quantity', 0)->count(),
                 'pending_orders' => Order::query()->where('status', 'PENDING')->count(),
-                'todays_orders' => (clone $todayOrders)->count(),
-                'todays_revenue' => (float) ((clone $todayOrders)
-                    ->whereNotIn('status', ['CANCELLED'])
-                    ->sum('total')),
+                'todays_orders' => Order::query()->whereDate('created_at', $today)->count(),
+                // Revenue is actual money: the sum of payments received today.
+                // Negative payments (refunds — auto-written when a paid order is
+                // cancelled or returned) reduce it.
+                'todays_revenue' => (float) Payment::query()->whereDate('created_at', $today)->sum('amount'),
+                'todays_refunds' => (float) Payment::query()->whereDate('created_at', $today)->where('amount', '<', 0)->sum('amount') * -1,
+                'todays_returns' => OrderReturn::query()->whereDate('created_at', $today)->count(),
                 'currency' => config('shop.currency'),
             ],
         ]);

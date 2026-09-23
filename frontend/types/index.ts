@@ -185,6 +185,8 @@ export type AdminStats = {
   pending_orders: number;
   todays_orders: number;
   todays_revenue: number;
+  todays_refunds?: number;
+  todays_returns?: number;
   currency?: string;
 };
 
@@ -303,6 +305,16 @@ export type AdminOrder = {
   created_at: string;
 };
 
+export type AdminPayment = {
+  id: number;
+  amount: number;
+  method: string;
+  reference: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type AdminOrderDetail = {
   id: number;
   order_number: string;
@@ -322,6 +334,8 @@ export type AdminOrderDetail = {
   customer_notes: string | null;
   internal_notes: string | null;
   created_at: string;
+  payments: AdminPayment[] | [];
+  paid_total: number;
   customer: {
     id: number;
     name: string;

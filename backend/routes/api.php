@@ -66,6 +66,7 @@ Route::prefix('admin')->group(function () {
         Route::get('orders/{order}', [Admin\OrderController::class, 'show']);
         Route::put('orders/{order}', [Admin\OrderController::class, 'update']);
         Route::put('orders/{order}/status', [Admin\OrderController::class, 'setStatus']);
+        Route::post('orders/{order}/payments', [Admin\OrderController::class, 'recordPayment']);
 
         // Customers
         Route::get('customers', [Admin\CustomerController::class, 'index']);

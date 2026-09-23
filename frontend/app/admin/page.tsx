@@ -59,7 +59,11 @@ export default function DashboardPage() {
             <StatCard
               label="Revenue today"
               value={formatMoney(stats?.todays_revenue ?? 0, stats?.currency)}
-              hint={`${stats?.todays_orders ?? 0} order(s) today`}
+              hint={`${stats?.todays_orders ?? 0} order(s) today${
+                (stats?.todays_refunds ?? 0) > 0
+                  ? ` · ${formatMoney(-(stats?.todays_refunds ?? 0), stats?.currency)} refunded`
+                  : ""
+              }`}
             />
             <StatCard label="Pending orders" value={stats?.pending_orders ?? 0} hint="Awaiting confirmation" />
             <StatCard

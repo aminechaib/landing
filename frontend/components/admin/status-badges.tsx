@@ -16,7 +16,8 @@ export function OrderStatusBadge({ status }: { status: string }) {
 }
 
 export function PaymentStatusBadge({ status }: { status: string }) {
-  const variant = status === "PAID" ? "success" : status === "FAILED" ? "destructive" : "outline";
+  const variant =
+    status === "PAID" ? "success" : status === "FAILED" || status === "REFUNDED" ? "destructive" : "outline";
   return <Badge variant={variant as never}>{status}</Badge>;
 }
 

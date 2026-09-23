@@ -11,6 +11,15 @@ import { PageHeader } from "@/components/admin/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -29,11 +38,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { adminApi } from "@/lib/api";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { AdminOrderDetail } from "@/types";
 
 const STATUSES = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"];
+const PAYMENT_METHODS = ["CASH", "CARD", "BANK_TRANSFER", "COD", "OTHER"];
 
 export default function AdminOrderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -41,6 +52,13 @@ export default function AdminOrderDetailPage() {
   const [order, setOrder] = useState<AdminOrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [payOpen, setPayOpen] = useState(false);
+  const [payAmount, setPayAmount] = useState<string>("");
+  const [payMethod, setPayMethod] = useState("CASH");
+  const [payReference, setPayReference] = useState("");
+  const [payNotes, setPayNotes] = useState("");
+  const [paySaving, setPaySaving] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -54,18 +72,29 @@ export default function AdminOrderDetailPage() {
   }, [params.id]);
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+
+    const run = async () => {
+      // Yield so no state is updated synchronously inside the effect.
+      await Promise.resolve();
+      if (cancelled) return;
+      await load();
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   async function updateStatus(status: string) {
     if (!order || status === order.status) return;
-    if (
-      (status === "CANCELLED" || status === "RETURNED") &&
-      !window.confirm(
-        `${status === "CANCELLED" ? "Cancelling" : "Returning"} this order will return all items to stock. Continue?`,
-      )
-    ) {
-      return;
+    if (status === "CANCELLED" || status === "RETURNED") {
+      const message =
+        status === "RETURNED"
+          ? "Returning this order records the return, puts taken stock back on the shelves and refunds any received payment. Continue?"
+          : "Cancelling this order returns any taken stock to the shelves. Continue?";
+      if (!window.confirm(message)) return;
     }
     setSaving(true);
     try {
@@ -79,6 +108,43 @@ export default function AdminOrderDetailPage() {
       toast.error(err instanceof Error ? err.message : "Update failed");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function openPayment() {
+    if (!order) return;
+    setPayOpen(true);
+    setPayAmount(String(Math.max(0, order.total - order.paid_total)));
+    setPayMethod(order.payment_method === "COD" ? "CASH" : order.payment_method);
+    setPayReference("");
+    setPayNotes("");
+  }
+
+  async function submitPayment() {
+    if (!order || paySaving) return;
+    const amount = Number(payAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter a payment amount greater than zero.");
+      return;
+    }
+    setPaySaving(true);
+    try {
+      const res = await adminApi<{ message: string }>(`/api/admin/orders/${order.id}/payments`, {
+        method: "POST",
+        body: JSON.stringify({
+          amount,
+          method: payMethod,
+          reference: payReference.trim() || null,
+          notes: payNotes.trim() || null,
+        }),
+      });
+      toast.success(res.message);
+      setPayOpen(false);
+      await load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to record payment");
+    } finally {
+      setPaySaving(false);
     }
   }
 
@@ -231,6 +297,31 @@ export default function AdminOrderDetailPage() {
               </span>
             </div>
             <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Paid</span>
+              <span className="tabular-nums font-medium">
+                {formatMoney(order.paid_total, order.currency)} / {formatMoney(order.total, order.currency)}
+              </span>
+            </div>
+            {order.payments.length > 0 && (
+              <ul className="space-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
+                {order.payments.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-2">
+                    <span className="font-mono">
+                      {formatMoney(p.amount, order.currency)} · {p.method}
+                      {p.reference ? ` · ${p.reference}` : ""}
+                    </span>
+                    <span>
+                      {formatDateTime(p.created_at)}
+                      {p.created_by ? ` · ${p.created_by}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Button type="button" variant="outline" size="sm" className="w-full" onClick={openPayment}>
+              Add payment
+            </Button>
+            <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Fulfillment</span>
               <span>{order.shipping_method} · {order.shipping_status}</span>
             </div>
@@ -267,6 +358,85 @@ export default function AdminOrderDetailPage() {
           )}
         </Card>
       </div>
+
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add payment</DialogTitle>
+            <DialogDescription>
+              Record a payment against {order.order_number}. Once the paid amount covers the total, the order is marked
+              as paid.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm">
+              <span className="text-muted-foreground">Balance</span>
+              <span className="tabular-nums font-medium">
+                {formatMoney(Math.max(0, order.paid_total), order.currency)} received of{" "}
+                {formatMoney(order.total, order.currency)}
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="pay-amount">Amount ({order.currency})</Label>
+              <Input
+                id="pay-amount"
+                type="number"
+                min={0.01}
+                step={0.01}
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="pay-method">Method</Label>
+              <Select value={payMethod} onValueChange={setPayMethod}>
+                <SelectTrigger id="pay-method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="pay-reference">Reference</Label>
+              <Input
+                id="pay-reference"
+                value={payReference}
+                onChange={(e) => setPayReference(e.target.value)}
+                placeholder="e.g. bank receipt no. / card last 4"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="pay-notes">Notes</Label>
+              <Textarea
+                id="pay-notes"
+                rows={2}
+                value={payNotes}
+                onChange={(e) => setPayNotes(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPayOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitPayment} disabled={paySaving}>
+              {paySaving ? "Recording…" : "Record payment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

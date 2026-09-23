@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderReturn;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Support\Facades\DB;
@@ -19,10 +21,12 @@ class OrderService
 
     /**
      * Guest checkout. Runs in one transaction:
-     * validate -> price server-side -> create customer/order/items ->
-     * deduct stock with movements -> commit.
+     * validate -> price server-side -> create customer/order/items.
      *
      * Never trusts prices or stock coming from the client.
+     *
+     * No stock is taken here. Quantities are only pulled from the shelves at
+     * confirmation time (see updateStatus), so pending orders hold no stock.
      */
     public function create(array $data): Order
     {
@@ -136,14 +140,6 @@ class OrderService
                     'total' => $line['lineTotal'],
                     'warranty_months' => $line['product']->warranty_months,
                 ]);
-
-                $this->inventory->sell(
-                    $line['product'],
-                    $line['quantity'],
-                    Order::class,
-                    $order->id,
-                    "Sale — order {$order->order_number}",
-                );
             }
 
             return $order->fresh(['items']);
@@ -151,8 +147,12 @@ class OrderService
     }
 
     /**
-     * Status transition handling: confirmations create warranties, cancellations
-     * and returns restore stock exactly once.
+     * Status transition handling:
+     *  - CONFIRMED pulls the ordered quantities from stock (FIFO, one OUT
+     *    movement per product) and creates warranties.
+     *  - CANCELLED / RETURNED give the stock back, exactly once, but only if
+     *    the order had actually been confirmed (nothing was taken at placement,
+     *    and legacy pre-change orders are detected by their OUT movements).
      */
     public function updateStatus(Order $order, string $status, ?int $userId = null): Order
     {
@@ -170,6 +170,14 @@ class OrderService
             $order->status = $status;
 
             if ($status === 'CONFIRMED') {
+                // Take the stock only now. Orders placed while stock is short
+                // fail here with a clear error instead of overcommitting.
+                try {
+                    $this->sellOrderStock($order, $userId);
+                } catch (InvalidArgumentException $e) {
+                    validation_error(['status' => $e->getMessage()]);
+                }
+
                 $this->createWarranties($order);
             }
 
@@ -180,16 +188,28 @@ class OrderService
             if ($status === 'DELIVERED') {
                 $order->payment_status = 'PAID';
                 $order->shipping_status = 'DELIVERED';
+                $this->settleCodOnDelivery($order, $userId);
             }
 
-            // Stock returns to the shelves when an unshipped order is cancelled
-            // or goods physically come back.
-            $wasOpen = ! in_array($previous, ['CANCELLED', 'RETURNED'], true);
-
-            if ($status === 'CANCELLED' && in_array($previous, ['PENDING', 'CONFIRMED', 'PROCESSING'], true)) {
+            // Stock returns to the shelves when an order that already took stock
+            // is cancelled, or goods physically come back after delivery.
+            if ($status === 'CANCELLED' && $this->stockTaken($order, $previous)) {
                 $this->restockOrder($order, "Order {$order->order_number} cancelled", $userId);
-            } elseif ($status === 'RETURNED' && $wasOpen && $order->shipping_status === 'DELIVERED') {
-                $this->restockOrder($order, "Order {$order->order_number} returned", $userId);
+            } elseif ($status === 'RETURNED') {
+                // Whole-order return. Always records the return and lets the
+                // recordReturn() movement math decide how much stock — if any —
+                // actually comes back (an order that never left the shelves
+                // restocks nothing; a delivered order comes back exactly once).
+                $this->recordReturn($order, "Order {$order->order_number} returned", $userId);
+                $order->shipping_status = 'RETURNED';
+                $this->voidWarranties($order);
+            }
+
+            // Money that was already received has to be returned.
+            if ($status === 'CANCELLED') {
+                $this->refundPayments($order, "Refund — order {$order->order_number} cancelled", $userId);
+            } elseif ($status === 'RETURNED') {
+                $this->refundPayments($order, "Refund — order {$order->order_number} returned", $userId);
             }
 
             $order->save();
@@ -211,6 +231,184 @@ class OrderService
                     $userId,
                 );
             }
+        }
+    }
+
+    /**
+     * Whole-order return: create (or reuse) the returns record and send the
+     * items back to the shelves. Restore quantities are derived from the
+     * inventory ledger — only stock that was actually taken and has not been
+     * returned yet comes back, so the transition is safe no matter what
+     * status the order was in before, and repeats stay a no-op.
+     */
+    private function recordReturn(Order $order, string $reason, ?int $userId): void
+    {
+        $return = OrderReturn::query()->where('order_id', $order->id)->first();
+
+        if (! $return) {
+            $return = OrderReturn::create([
+                'order_id' => $order->id,
+                'customer_id' => $order->customer_id,
+                'status' => 'COMPLETED',
+                'reason' => $reason,
+                'notes' => 'Auto-created when the order was marked RETURNED.',
+            ]);
+        }
+
+        // Stock actually pulled from the shelves for this order (FIFO OUT movements).
+        $taken = InventoryMovement::query()
+            ->where('reference_type', Order::class)
+            ->where('reference_id', $order->id)
+            ->where('type', 'OUT')
+            ->selectRaw('product_id, ABS(SUM(quantity)) AS qty')
+            ->groupBy('product_id')
+            ->pluck('qty', 'product_id');
+
+        // ...minus stock already handed back (an earlier cancellation or return).
+        $returned = InventoryMovement::query()
+            ->where('type', 'RETURN')
+            ->where(function ($query) use ($order) {
+                $query->where(function ($q) use ($order) {
+                    $q->where('reference_type', Order::class)->where('reference_id', $order->id);
+                })->orWhere(function ($q) use ($order) {
+                    $q->where('reference_type', OrderReturn::class)->whereIn(
+                        'reference_id',
+                        OrderReturn::query()->where('order_id', $order->id)->pluck('id'),
+                    );
+                });
+            })
+            ->selectRaw('product_id, SUM(quantity) AS qty')
+            ->groupBy('product_id')
+            ->pluck('qty', 'product_id');
+
+        $leftToReturn = $taken->map(fn ($qty, $productId) => (int) $qty - (int) ($returned[$productId] ?? 0));
+
+        foreach ($order->items as $item) {
+            if (! $item->product_id) {
+                continue;
+            }
+
+            $available = min($item->quantity, max(0, (int) ($leftToReturn[$item->product_id] ?? 0)));
+            $leftToReturn[$item->product_id] = max(0, (int) ($leftToReturn[$item->product_id] ?? 0) - $available);
+
+            if ($available <= 0) {
+                continue;
+            }
+
+            if ($line = $return->items()->firstWhere('order_item_id', $item->id)) {
+                $line->update(['quantity' => $line->quantity + $available, 'restocked' => true]);
+            } else {
+                $return->items()->create([
+                    'order_item_id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $available,
+                    'condition' => 'NEW',
+                    'action' => 'RESTOCK',
+                    'restocked' => true,
+                ]);
+            }
+
+            $this->inventory->restock($item->product, $available, OrderReturn::class, $return->id, $reason, $userId);
+        }
+    }
+
+    /** Returned goods no longer carry an active warranty. */
+    private function voidWarranties(Order $order): void
+    {
+        \App\Models\Warranty::query()
+            ->where('order_id', $order->id)
+            ->where('status', 'ACTIVE')
+            ->update(['status' => 'VOID']);
+    }
+
+    /**
+     * Cash-on-delivery settlement: when an order is delivered, whatever has
+     * not been paid yet is received at the door and recorded as a payment.
+     * This is what makes "revenue today" reflect real money received.
+     */
+    private function settleCodOnDelivery(Order $order, ?int $userId): void
+    {
+        if ($order->payments()->where('method', 'REFUND')->exists()) {
+            return;
+        }
+
+        $paid = (float) $order->payments()->sum('amount');
+        $remaining = round((float) $order->total - $paid, 2);
+
+        if ($remaining > 0) {
+            $order->payments()->create([
+                'amount' => $remaining,
+                'method' => 'COD',
+                'currency' => $order->currency,
+                'notes' => 'Auto — payment settled on delivery.',
+                'created_by' => $userId,
+            ]);
+        }
+    }
+
+    /**
+     * Reverse already-recorded money when an order is cancelled or returned.
+     * Writes a single negative payment (REFUND) so the money ledger and the
+     * dashboard revenue — which is a sum of payments — drop accordingly.
+     */
+    private function refundPayments(Order $order, string $reason, ?int $userId): void
+    {
+        if ($order->payments()->where('method', 'REFUND')->exists()) {
+            return;
+        }
+
+        $paid = (float) $order->payments()->sum('amount');
+        if ($paid <= 0) {
+            return;
+        }
+
+        $order->payments()->create([
+            'amount' => -$paid,
+            'method' => 'REFUND',
+            'reference' => 'Refund',
+            'currency' => $order->currency,
+            'notes' => $reason,
+            'created_by' => $userId,
+        ]);
+
+        $order->update(['payment_status' => 'REFUNDED']);
+    }
+
+    /**
+     * Whether the shelves were actually depleted for this order.
+     * True for any order that reached CONFIRMED or later, or (for orders
+     * created before the confirm-time-deduction change) that still carry an
+     * OUT movement.
+     */
+    private function stockTaken(Order $order, string $previous): bool
+    {
+        if (in_array($previous, ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'], true)) {
+            return true;
+        }
+
+        return InventoryMovement::query()
+            ->where('reference_type', Order::class)
+            ->where('reference_id', $order->id)
+            ->where('type', 'OUT')
+            ->exists();
+    }
+
+    /** Pull each ordered line from stock (FIFO via InventoryService). */
+    private function sellOrderStock(Order $order, ?int $userId): void
+    {
+        foreach ($order->items as $item) {
+            if (! $item->product_id) {
+                continue;
+            }
+
+            $this->inventory->sell(
+                $item->product,
+                $item->quantity,
+                Order::class,
+                $order->id,
+                "Confirmed order {$order->order_number}",
+                $userId,
+            );
         }
     }
 

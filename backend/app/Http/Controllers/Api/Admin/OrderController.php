@@ -80,6 +80,7 @@ class OrderController extends Controller
             'customer',
             'items.product:id,name,slug',
             'items.warranty:id,order_item_id,serial_number,warranty_months,start_date,end_date,status',
+            'payments.creator:id,name',
         ]);
 
         return response()->json(['data' => [
@@ -107,6 +108,16 @@ class OrderController extends Controller
             'customer_notes' => $order->customer_notes,
             'internal_notes' => $order->internal_notes,
             'created_at' => $order->created_at->toIso8601String(),
+            'payments' => $order->payments->sortByDesc('created_at')->values()->map(fn ($p) => [
+                'id' => $p->id,
+                'amount' => (float) $p->amount,
+                'method' => $p->method,
+                'reference' => $p->reference,
+                'notes' => $p->notes,
+                'created_by' => $p->creator?->name,
+                'created_at' => $p->created_at->toIso8601String(),
+            ]),
+            'paid_total' => (float) $order->payments->sum('amount'),
             'customer' => [
                 'id' => $order->customer->id,
                 'name' => $order->customer->first_name . ' ' . $order->customer->last_name,
@@ -141,7 +152,7 @@ class OrderController extends Controller
     {
         $data = $request->validate([
             'internal_notes' => ['nullable', 'string', 'max:5000'],
-            'payment_status' => ['nullable', 'in:PENDING,PAID,FAILED'],
+            'payment_status' => ['nullable', 'in:PENDING,PAID,FAILED,REFUNDED'],
             'shipping_status' => ['nullable', 'in:PENDING,PROCESSING,SHIPPED,DELIVERED,RETURNED'],
         ]);
 
@@ -161,5 +172,47 @@ class OrderController extends Controller
             'message' => "Order {$order->order_number} set to {$order->status}.",
             'data' => ['status' => $order->status],
         ]);
+    }
+
+    /** POST /api/admin/orders/{order}/payments — record a payment against an order. */
+    public function recordPayment(Request $request, Order $order): JsonResponse
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'method' => ['nullable', 'string', 'max:50'],
+            'reference' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $recorded = (float) $order->payments()->sum('amount');
+        $remaining = round((float) $order->total - $recorded, 2);
+        $amount = round((float) $data['amount'], 2);
+
+        if ($amount > $remaining + 0.005) {
+            validation_error(['amount' => "Amount exceeds the remaining balance of {$remaining}."]);
+        }
+
+        $payment = $order->payments()->create([
+            'amount' => $amount,
+            'method' => $data['method'] ?? $order->payment_method,
+            'reference' => $data['reference'] ?? null,
+            'currency' => $order->currency,
+            'notes' => $data['notes'] ?? null,
+            'created_by' => $request->user()->id,
+        ]);
+
+        if (round($recorded + $amount, 2) >= round((float) $order->total, 2) - 0.005) {
+            $order->update(['payment_status' => 'PAID']);
+        }
+
+        return response()->json([
+            'message' => 'Payment recorded.',
+            'data' => [
+                'id' => $payment->id,
+                'amount' => (float) $payment->amount,
+                'paid_total' => round($recorded + $amount, 2),
+                'payment_status' => $order->payment_status,
+            ],
+        ], 201);
     }
 }

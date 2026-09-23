@@ -43,6 +43,10 @@ class ReturnController extends Controller
 
         $order = \App\Models\Order::with('items')->findOrFail($data['order_id']);
 
+        if ($order->status === 'RETURNED') {
+            validation_error(['order_id' => 'This order is already fully returned.']);
+        }
+
         foreach ($data['items'] as $item) {
             $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
             if (! $orderItem) {
@@ -65,7 +69,7 @@ class ReturnController extends Controller
             foreach ($data['items'] as $item) {
                 $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
 
-                $return->items()->create([
+                $returnItem = $return->items()->create([
                     'order_item_id' => $orderItem->id,
                     'product_id' => $orderItem->product_id,
                     'quantity' => $item['quantity'],
@@ -82,6 +86,8 @@ class ReturnController extends Controller
                         "Return of order {$order->order_number}",
                         $request->user()->id,
                     );
+
+                    $returnItem->update(['restocked' => true]);
                 }
             }
 
