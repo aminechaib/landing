@@ -27,11 +27,11 @@ class OrderController extends Controller
 
             'customer' => ['required', 'array'],
             'customer.first_name' => ['required', 'string', 'max:100'],
-            'customer.last_name' => ['required', 'string', 'max:100'],
+            'customer.last_name' => ['nullable', 'string', 'max:100'],
             'customer.phone' => ['required', 'string', 'min:6', 'max:30', 'regex:/^[0-9+\s\-().]+$/'],
             'customer.email' => ['nullable', 'email:filter', 'max:255'],
             'customer.address' => ['required', 'string', 'max:500'],
-            'customer.city' => ['required', 'string', 'max:120'],
+            'customer.city' => ['nullable', 'string', 'max:120'],
 
             'notes' => ['nullable', 'string', 'max:2000'],
             'discount_code' => ['nullable', 'string', 'max:50'],

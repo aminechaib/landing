@@ -12,7 +12,7 @@ class SettingController extends Controller
 {
     private const KEYS = ['store_name', 'promo_code', 'promo_percent', 'promo_title', 'promo_title_ar', 'shipping_cost', 'support_email', 'support_phone', 'testimonials_mode'];
 
-    private const JSON_KEYS = ['home_content', 'testimonials', 'home_sections'];
+    private const JSON_KEYS = ['home_content', 'testimonials', 'marquee', 'home_sections'];
 
     /** GET /api/admin/settings */
     public function show(): JsonResponse
@@ -43,6 +43,7 @@ class SettingController extends Controller
             // Bilingual homepage blocks — stored as JSON strings.
             'home_content' => ['nullable', 'array'],
             'testimonials' => ['nullable', 'array'],
+            'marquee' => ['nullable', 'array'],
             'home_sections' => ['nullable', 'array'],
             'testimonials_mode' => ['nullable', 'in:default,custom'],
         ]);
@@ -54,6 +55,14 @@ class SettingController extends Controller
                     ? array_intersect_key($block, array_flip(['hero', 'guarantees']))
                     : $block,
                 $data['home_content']
+            );
+        }
+
+        // Marquee items: only known languages, each element collapsed to a plain string.
+        if (isset($data['marquee']) && is_array($data['marquee'])) {
+            $data['marquee'] = array_map(
+                fn ($rows) => is_array($rows) ? array_values(array_filter(array_map('strval', $rows))) : [],
+                array_intersect_key($data['marquee'], array_flip(['en', 'ar']))
             );
         }
 

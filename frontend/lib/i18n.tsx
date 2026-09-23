@@ -14,7 +14,7 @@ export type Dir = "rtl" | "ltr";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const ar: Record<string, any> = {
-  nav: { home: "الرئيسية", collections: "المجموعات", support: "الدعم", track: "تتبع الطلب", menu: "فتح القائمة" },
+  nav: { home: "الرئيسية", collections: "المجموعات", support: "الدعم", track: "تتبع الطلب", menu: "فتح القائمة", cart: "سلة التسوق" },
   hero: {
     badge: "موسم جديد · تقنيات مميزة",
     titleA: "اكتشف ",
@@ -91,6 +91,7 @@ const ar: Record<string, any> = {
     quantity: "الكمية",
     maxQty: "الحد الأقصى {max} قطعة",
     contactTitle: "بيانات المستلم",
+    name: "الاسم الكامل",
     firstName: "الاسم الأول",
     lastName: "اسم العائلة",
     phone: "رقم الهاتف",
@@ -115,6 +116,19 @@ const ar: Record<string, any> = {
     continueShopping: "مواصلة التسوق",
     downloadReceipt: "تحميل الإيصال",
     failed: "تعذر إرسال الطلب. حاول مرة أخرى.",
+  },
+  cart: {
+    title: "سلة التسوق",
+    empty: "سلتك فارغة — أضف منتجات لبدء الطلب.",
+    subtotal: "المجموع الفرعي",
+    shipping: "الشحن",
+    free: "مجاني",
+    total: "الإجمالي",
+    checkout: "إتمام الطلب",
+    remove: "إزالة",
+    addToCart: "أضف إلى السلة",
+    addedToCart: "أضيف إلى السلة",
+    viewCart: "عرض السلة",
   },
   track: {
     title: "تتبع طلبك",
@@ -211,7 +225,7 @@ const ar: Record<string, any> = {
 };
 
 const en: Record<string, any> = {
-  nav: { home: "Home", collections: "Collections", support: "Support", track: "Track Order", menu: "Open menu" },
+  nav: { home: "Home", collections: "Collections", support: "Support", track: "Track Order", menu: "Open menu", cart: "Shopping cart" },
   hero: {
     badge: "New Season · Premium Tech",
     titleA: "Discover the ",
@@ -288,6 +302,7 @@ const en: Record<string, any> = {
     quantity: "Quantity",
     maxQty: "Max {max}",
     contactTitle: "Delivery details",
+    name: "Full name",
     firstName: "First name",
     lastName: "Last name",
     phone: "Phone number",
@@ -312,6 +327,19 @@ const en: Record<string, any> = {
     continueShopping: "Continue shopping",
     downloadReceipt: "Download receipt",
     failed: "Something went wrong. Please try again.",
+  },
+  cart: {
+    title: "Your cart",
+    empty: "Your cart is empty — add products to place an order.",
+    subtotal: "Subtotal",
+    shipping: "Shipping",
+    free: "FREE",
+    total: "Total",
+    checkout: "Proceed to checkout",
+    remove: "Remove",
+    addToCart: "Add to cart",
+    addedToCart: "Added to cart",
+    viewCart: "View cart",
   },
   track: {
     title: "Track your order",

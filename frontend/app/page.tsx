@@ -120,7 +120,7 @@ export default function HomePage() {
               <CollectionsSection categories={categories} onSelect={handleSelectCollection} />
             ) : null}
             {settings?.sections?.promo ?? true ? <PromoBanner settings={settings} /> : null}
-            <MarqueeStrip />
+            {settings?.sections?.marquee ?? true ? <MarqueeStrip settings={settings} /> : null}
             {settings?.sections?.favorites ?? true ? (
               <FavoritesSection
                 products={products}

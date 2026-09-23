@@ -1,29 +1,15 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n";
+import { MARQUEE_DEFAULTS } from "@/lib/marquee";
+import type { StoreSettings } from "@/types";
 
-const DEFAULT_ITEMS = {
-  ar: [
-    "شحن مجاني",
-    "ضمان رسمي",
-    "الدفع عند الاستلام",
-    "إرجاع خلال 30 يوماً",
-    "منتجات أصلية",
-    "خدمة عملاء متميزة",
-  ],
-  en: [
-    "Free Shipping",
-    "Official Warranty",
-    "Cash on Delivery",
-    "30-Day Returns",
-    "Authentic Products",
-    "Premium Support",
-  ],
-};
-
-export function MarqueeStrip() {
+export function MarqueeStrip({ settings }: { settings?: StoreSettings | null }) {
   const { locale } = useI18n();
-  const items = DEFAULT_ITEMS[locale] ?? DEFAULT_ITEMS.en;
+  const configured = settings?.marquee?.[locale];
+  const items = configured?.length
+    ? configured
+    : MARQUEE_DEFAULTS[locale] ?? MARQUEE_DEFAULTS.en;
 
   return (
     <section className="relative overflow-hidden border-y border-border bg-background py-5">

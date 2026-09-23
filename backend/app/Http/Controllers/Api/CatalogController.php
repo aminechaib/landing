@@ -123,6 +123,8 @@ class CatalogController extends Controller
                 'testimonials' => json_decode((string) Setting::get('testimonials'), true),
                 // Story source: built-in defaults or the admin-managed rows above.
                 'testimonials_mode' => Setting::get('testimonials_mode') ?: 'custom',
+                // Scrolling marquee items per locale (empty = built-in defaults).
+                'marquee' => json_decode((string) Setting::get('marquee'), true),
                 // Which homepage sections the admin has enabled (missing = visible).
                 'sections' => json_decode((string) Setting::get('home_sections'), true),
             ],

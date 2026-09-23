@@ -90,7 +90,7 @@ class OrderService
                 ['phone' => preg_replace('/[\s\-().]/', '', $data['customer']['phone'])],
                 [
                     'first_name' => trim($data['customer']['first_name']),
-                    'last_name' => trim($data['customer']['last_name']),
+                    'last_name' => trim($data['customer']['last_name'] ?? ''),
                     'email' => $data['customer']['email'] ?? null,
                     'address' => $data['customer']['address'] ?? null,
                     'city' => $data['customer']['city'] ?? null,

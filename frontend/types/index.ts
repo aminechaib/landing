@@ -95,18 +95,20 @@ export type StoreSettings = {
   > | null;
   // Which story source the storefront renders: built-ins or admin rows.
   testimonials_mode?: "default" | "custom" | null;
-  sections?: Partial<Record<"hero" | "collections" | "promo" | "favorites" | "stories", boolean>> | null;
+  // Scrolling marquee items per locale (empty = built-in defaults).
+  marquee?: Partial<Record<"ar" | "en", string[]>> | null;
+  sections?: Partial<Record<"hero" | "collections" | "promo" | "favorites" | "marquee" | "stories", boolean>> | null;
 };
 
 export type OrderPayload = {
   items: { product_id: number; variant_id?: number | null; quantity: number }[];
   customer: {
     first_name: string;
-    last_name: string;
+    last_name?: string;
     phone: string;
     email?: string;
     address: string;
-    city: string;
+    city?: string;
   };
   notes?: string;
   discount_code?: string;

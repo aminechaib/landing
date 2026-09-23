@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { adminApi, apiUpload } from "@/lib/api";
 import { HERO_DEFAULTS } from "@/lib/i18n";
+import { MARQUEE_DEFAULTS } from "@/lib/marquee";
 import { TESTIMONIALS } from "@/lib/testimonials";
 import type { HeroContent, HomeContent } from "@/types";
 
@@ -40,7 +41,7 @@ const HERO_FIELDS: { key: keyof HeroContent; label: string; textarea?: boolean }
 ];
 
 type Locale = "en" | "ar";
-type SectionKey = "hero" | "collections" | "promo" | "favorites" | "stories";
+type SectionKey = "hero" | "collections" | "promo" | "favorites" | "marquee" | "stories";
 type Story = { name: string; location: string; rating: number; title: string; text: string };
 
 const SECTION_LABELS: Record<SectionKey, string> = {
@@ -48,6 +49,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
   collections: "Collections",
   promo: "Promo banner",
   favorites: "Featured products",
+  marquee: "Scrolling marquee",
   stories: "Customer stories",
 };
 
@@ -75,9 +77,11 @@ export default function SettingsPage() {
     collections: true,
     promo: true,
     favorites: true,
+    marquee: true,
     stories: true,
   });
   const [stories, setStories] = useState<Record<Locale, Story[]>>({ en: [], ar: [] });
+  const [marquee, setMarquee] = useState<Record<Locale, string[]>>({ en: [], ar: [] });
   // Which set the storefront renders: built-in defaults or the rows below.
   const [mode, setMode] = useState<"default" | "custom">("custom");
   const [heroImage, setHeroImage] = useState<string | null>(null);
@@ -92,7 +96,7 @@ export default function SettingsPage() {
         const data = res.data;
         const scalars: Record<string, string | number | null> = {};
         for (const [key, value] of Object.entries(data)) {
-          if (!["home_content", "testimonials", "home_sections"].includes(key)) {
+          if (!["home_content", "testimonials", "marquee", "home_sections"].includes(key)) {
             scalars[key] = value as string | number | null;
           }
         }
@@ -107,6 +111,9 @@ export default function SettingsPage() {
 
         const storedStories = (data.testimonials ?? {}) as Partial<Record<Locale, Story[]>>;
         setStories({ en: storedStories.en ?? [], ar: storedStories.ar ?? [] });
+
+        const storedMarquee = (data.marquee ?? {}) as Partial<Record<Locale, string[]>>;
+        setMarquee({ en: storedMarquee.en ?? [], ar: storedMarquee.ar ?? [] });
 
         const storedMode = (data.testimonials_mode as string | undefined) ?? "custom";
         setMode(storedMode === "default" ? "default" : "custom");
@@ -149,6 +156,27 @@ export default function SettingsPage() {
   function copyDefaults(locale: Locale) {
     setStories((prev) => ({ ...prev, [locale]: TESTIMONIALS[locale].map((s) => ({ ...s })) }));
     toast.info(`Copied ${TESTIMONIALS[locale].length} default rows — press Save to keep them`);
+  }
+
+  function setMarqueeItem(locale: Locale, index: number, value: string) {
+    setMarquee((prev) => ({
+      ...prev,
+      [locale]: prev[locale].map((item, i) => (i === index ? value : item)),
+    }));
+  }
+
+  function addMarqueeItem(locale: Locale) {
+    setMarquee((prev) => ({ ...prev, [locale]: [...prev[locale], ""] }));
+  }
+
+  function removeMarqueeItem(locale: Locale, index: number) {
+    setMarquee((prev) => ({ ...prev, [locale]: prev[locale].filter((_, i) => i !== index) }));
+  }
+
+  /** Replaces the current rows with copies of the built-in marquee texts so they can be tweaked. */
+  function copyMarqueeDefaults(locale: Locale) {
+    setMarquee((prev) => ({ ...prev, [locale]: [...MARQUEE_DEFAULTS[locale]] }));
+    toast.info(`Copied ${MARQUEE_DEFAULTS[locale].length} default rows — press Save to keep them`);
   }
 
   /** One click: switch to Custom and fill both languages with editable copies of the defaults. */
@@ -230,6 +258,7 @@ export default function SettingsPage() {
           home_content: homeContent,
           testimonials: stories,
           testimonials_mode: mode,
+          marquee: marquee,
           home_sections: sections,
         }),
       });
@@ -307,6 +336,56 @@ export default function SettingsPage() {
             ))}
           </div>
         </Card>
+
+        {/* Scrolling marquee items — bilingual list editor */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {(["en", "ar"] as Locale[]).map((locale) => (
+            <Card key={locale} className="gap-4 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">
+                  Scrolling marquee — {locale === "en" ? "English" : "العربية"}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    title="Replaces the current rows with copies of the built-in items so you can tweak them"
+                    onClick={() => copyMarqueeDefaults(locale)}
+                  >
+                    Copy defaults
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => addMarqueeItem(locale)}>
+                    <Plus className="size-4" /> Add item
+                  </Button>
+                </div>
+              </div>
+              <p className="-mt-2 text-xs text-muted-foreground">
+                Shown in the scrolling strip on the homepage. Empty rows are ignored; an empty list
+                falls back to the built-in items.
+              </p>
+              {marquee[locale].length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No custom items — use “Copy defaults” to start from the built-in ones, or “Add
+                  item” for a blank row.
+                </p>
+              )}
+              {marquee[locale].map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    dir={locale === "ar" ? "rtl" : "ltr"}
+                    value={item}
+                    placeholder="e.g. Free Shipping"
+                    onChange={(e) => setMarqueeItem(locale, index, e.target.value)}
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeMarqueeItem(locale, index)}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+            </Card>
+          ))}
+        </div>
 
         {/* Shared hero image */}
         <Card className="gap-4 p-5">

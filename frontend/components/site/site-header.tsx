@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 
 import { Logo } from "@/components/site/logo";
 import { LanguageSwitcher } from "@/components/site/language-switcher";
@@ -14,12 +14,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
+  const { count, openCart } = useCart();
 
   const navLinks = [
     { label: t("nav.home"), href: "/" },
@@ -95,7 +97,21 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1 lg:w-auto">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("nav.cart")}
+            onClick={openCart}
+            className="relative"
+          >
+            <ShoppingCart className="size-5" />
+            {count > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white rtl:-left-0.5 rtl:right-auto">
+                {count}
+              </span>
+            )}
+          </Button>
           <div className="hidden lg:block">
             <LanguageSwitcher />
           </div>

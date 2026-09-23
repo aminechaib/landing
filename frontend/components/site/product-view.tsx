@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Zap } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { GuaranteeBar } from "@/components/site/guarantee-bar";
-import { OrderDialog } from "@/components/site/order-dialog";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { StarRating } from "@/components/site/star-rating";
@@ -14,7 +14,8 @@ import { TestimonialsSection } from "@/components/site/testimonials-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, API_URL } from "@/lib/api";
+import { api } from "@/lib/api";
+import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
 import { formatMoney } from "@/lib/format";
 import { captureUtm } from "@/lib/utm";
@@ -28,8 +29,8 @@ export function ProductView({ slug }: { slug: string }) {
   const [notFound, setNotFound] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [variantId, setVariantId] = useState<number | null>(null);
-  const [orderOpen, setOrderOpen] = useState(false);
   const { t, locale } = useI18n();
+  const { addItem, openCart, openCheckout } = useCart();
 
   useEffect(() => {
     captureUtm();
@@ -56,6 +57,43 @@ export function ProductView({ slug }: { slug: string }) {
     () => product?.variants.find((v) => v.id === variantId) ?? null,
     [product, variantId],
   );
+
+  /** Cart line for this product, honoring the selected (or first) variant and real stock. */
+  const cartLine = useMemo(() => {
+    if (!product) return null;
+    const selected = variant ?? (product.variants.length > 0 ? product.variants[0] : null);
+    return {
+      key: `${product.id}:${selected?.id ?? 0}`,
+      product_id: product.id,
+      variant_id: selected?.id ?? null,
+      product_name: product.name,
+      variant_name: selected?.name ?? null,
+      image: product.images[0]?.url ?? null,
+      unit_price: Number(selected?.price ?? product.selling_price),
+      currency: product.currency,
+      max_qty: Math.max(1, Math.min(product.stock_quantity, 99)),
+    };
+  }, [product, variant]);
+
+  function handleAddToCart() {
+    if (!product || !cartLine || !product.in_stock) return;
+    if (product.variants.length > 0 && variantId === null) {
+      setVariantId(product.variants[0].id);
+    }
+    addItem(cartLine, 1);
+    toast(t("cart.addedToCart"), {
+      action: { label: t("cart.viewCart"), onClick: () => openCart() },
+    });
+  }
+
+  function handleOrderNow() {
+    if (!product || !cartLine || !product.in_stock) return;
+    if (product.variants.length > 0 && variantId === null) {
+      setVariantId(product.variants[0].id);
+    }
+    addItem(cartLine, 1);
+    openCheckout();
+  }
 
   if (loading) {
     return (
@@ -207,20 +245,26 @@ export function ProductView({ slug }: { slug: string }) {
 
             {/* CTA */}
             <div className="mt-8 space-y-3">
-              <Button
-                size="lg"
-                disabled={!product.in_stock}
-                onClick={() => {
-                  if (!variant && product.variants.length > 0) {
-                    // Default to the first style so ordering is one tap away.
-                    setVariantId(product.variants[0].id);
-                  }
-                  setOrderOpen(true);
-                }}
-                className="h-14 w-full text-base font-semibold tracking-wider ring-1 ring-accent/40 hover:ring-accent"
-              >
-                {product.in_stock ? t("product.orderNow") : t("badges.OUT_OF_STOCK")}
-              </Button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  disabled={!product.in_stock}
+                  onClick={handleOrderNow}
+                  className="h-14 flex-1 text-base font-semibold tracking-wider ring-1 ring-accent/40 hover:ring-accent"
+                >
+                  <Zap className="size-5 rtl:-scale-x-100" />
+                  {product.in_stock ? t("product.orderNow") : t("badges.OUT_OF_STOCK")}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  disabled={!product.in_stock}
+                  onClick={handleAddToCart}
+                  className="h-14 flex-1 text-base font-semibold"
+                >
+                  <ShoppingCart className="size-5" /> {t("cart.addToCart")}
+                </Button>
+              </div>
               <p className="text-center text-xs text-muted-foreground">
                 {product.in_stock ? t("product.stockInfo", { count: product.stock_quantity }) : t("product.outOfStockLine")}
                 {product.warranty_months > 0 &&
@@ -252,14 +296,6 @@ export function ProductView({ slug }: { slug: string }) {
       </main>
 
       <SiteFooter settings={settings} />
-
-      <OrderDialog
-        product={product}
-        variant={variant}
-        settings={settings}
-        open={orderOpen}
-        onOpenChange={setOrderOpen}
-      />
     </div>
   );
 }

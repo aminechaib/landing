@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
+import { CartUI } from "@/components/site/cart-ui";
+import { CartProvider } from "@/lib/cart";
 import { LocaleProvider } from "@/lib/i18n";
 import "./globals.css";
 
@@ -38,7 +40,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <LocaleProvider>{children}</LocaleProvider>
+        <LocaleProvider>
+          <CartProvider>
+            {children}
+            <CartUI />
+          </CartProvider>
+        </LocaleProvider>
         <Toaster position="top-center" richColors />
       </body>
     </html>
